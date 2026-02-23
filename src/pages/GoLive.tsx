@@ -57,6 +57,7 @@ const GoLive: React.FC = () => {
         };
 
         fetchDefaults();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     useEffect(() => {
@@ -82,6 +83,7 @@ const GoLive: React.FC = () => {
             if (interval) clearInterval(interval);
             if (vuInterval) clearInterval(vuInterval);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLive, micEnabled]);
 
     const formatUptime = (seconds: number) => {

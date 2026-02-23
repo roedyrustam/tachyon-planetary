@@ -18,6 +18,7 @@ const Layout: React.FC = () => {
 
         window.addEventListener('show-toast', handleToast);
         return () => window.removeEventListener('show-toast', handleToast);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const removeToast = (id: string) => {
