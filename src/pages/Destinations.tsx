@@ -55,7 +55,7 @@ const Destinations: React.FC = () => {
         else fetchDestinations();
     };
 
-    const handleAddDestination = async (newDest: { name: string; platform: string }) => {
+    const handleAddDestination = async (newDest: { name: string; platform: string; streamKey: string }) => {
         if (!user) return;
 
         const { error } = await supabase
@@ -64,6 +64,7 @@ const Destinations: React.FC = () => {
                 user_id: user.id,
                 name: newDest.name,
                 platform: newDest.platform,
+                stream_key: newDest.streamKey,
                 active: false
             }]);
 

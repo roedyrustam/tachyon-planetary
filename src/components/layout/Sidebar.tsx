@@ -1,4 +1,13 @@
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Radio, Video, Calendar, Settings as SettingsIcon, LogOut, BarChart3, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import './layout.css';
+
+interface SidebarProps {
+    isOpen: boolean;
+    setIsOpen: (isOpen: boolean) => void;
+}
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     const { signOut } = useAuth();

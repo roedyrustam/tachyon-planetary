@@ -5,27 +5,67 @@ import Badge from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { Play, Download, Trash2, Search, Filter, UploadCloud } from 'lucide-react';
 
-const mockVideos = [
-    { id: 1, title: 'Weekly Community Update #45', duration: '1:12:05', size: '2.4 GB', date: 'Oct 12, 2026', views: '12K', thumbnail: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { id: 2, title: 'Gaming Stream - Valorant Ranked', duration: '3:45:20', size: '8.1 GB', date: 'Oct 10, 2026', views: '45K', thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { id: 3, title: 'Tech Talk: Future of Web3', duration: '0:58:30', size: '1.2 GB', date: 'Oct 08, 2026', views: '8.5K', thumbnail: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { id: 4, title: 'How to build a Streaming PC', duration: '0:24:15', size: '4.8 GB', date: 'Oct 05, 2026', views: '150K', thumbnail: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { id: 5, title: 'Q&A Session with Subscribers', duration: '1:30:00', size: '3.0 GB', date: 'Oct 01, 2026', views: '18K', thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-    { id: 6, title: 'Indie Game Showcase', duration: '2:15:40', size: '5.5 GB', date: 'Sep 28, 2026', views: '22K', thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80' },
-];
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
+
+interface Video {
+    id: string;
+    title: string;
+    duration: string;
+    thumbnail: string;
+    views: string;
+    size: string;
+    date: string;
+    created_at?: string;
+}
 
 const Videos: React.FC = () => {
-    const [videos, setVideos] = React.useState(mockVideos);
+    const [videos, setVideos] = React.useState<Video[]>([]);
+    const [loading, setLoading] = React.useState(true);
     const [searchQuery, setSearchQuery] = React.useState('');
-    const [lastSharedId, setLastSharedId] = React.useState<number | null>(null);
+    const [lastSharedId, setLastSharedId] = React.useState<string | null>(null);
+    const { user } = useAuth();
 
-    const handleDelete = (id: number) => {
-        if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
-            setVideos(videos.filter(v => v.id !== id));
+    useEffect(() => {
+        if (user) {
+            fetchVideos();
+        }
+    }, [user]);
+
+    const fetchVideos = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('videos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setVideos(data || []);
+        } catch (error) {
+            console.error('Error fetching videos:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleShare = (id: number) => {
+    const handleDelete = async (id: string) => {
+        if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+            try {
+                const { error } = await supabase
+                    .from('videos')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                setVideos(videos.filter(v => v.id !== id));
+            } catch (error) {
+                console.error('Error deleting video:', error);
+            }
+        }
+    };
+
+    const handleShare = (id: string) => {
         setLastSharedId(id);
         setTimeout(() => setLastSharedId(null), 2000);
     };
@@ -66,7 +106,9 @@ const Videos: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredVideos.map(video => (
+                {loading ? (
+                    <div className="col-span-full py-20 text-center text-muted">Loading vault...</div>
+                ) : filteredVideos.map(video => (
                     <Card key={video.id} className="group overflow-hidden rounded-xl border border-[var(--border-light)] bg-[#1a1d24]">
                         <div className="relative aspect-video overflow-hidden">
                             <img

@@ -37,9 +37,66 @@ const viewershipData: Record<string, any[]> = {
     ]
 };
 
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
+
 const Dashboard: React.FC = () => {
     const [timeRange, setTimeRange] = React.useState('1h');
     const [chartData, setChartData] = React.useState(viewershipData['1h']);
+    const [stats, setStats] = React.useState({
+        viewers: '4,200',
+        activeStreams: 0,
+        totalVideos: 0,
+        bitrate: '6.2 Mbps',
+        isLive: false
+    });
+    const [destinations, setDestinations] = React.useState<any[]>([]);
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (!user) return;
+        fetchStats();
+
+        // Subscribe to profile changes for real-time live status
+        const channel = supabase
+            .channel('profile-status')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles',
+                filter: `id=eq.${user?.id}`
+            }, (payload) => {
+                if (payload.new && 'is_live' in payload.new) {
+                    setStats(prev => ({ ...prev, isLive: payload.new.is_live }));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user]);
+
+    const fetchStats = async () => {
+        try {
+            const [destRes, videoRes, profileRes] = await Promise.all([
+                supabase.from('destinations').select('*').eq('active', true),
+                supabase.from('videos').select('id', { count: 'exact' }),
+                supabase.from('profiles').select('is_live').eq('id', user?.id).single()
+            ]);
+
+            setStats(prev => ({
+                ...prev,
+                activeStreams: destRes.data?.length || 0,
+                totalVideos: videoRes.count || 0,
+                isLive: profileRes.data?.is_live || false
+            }));
+            setDestinations(destRes.data || []);
+        } catch (error) {
+            console.error('Error fetching dashboard stats:', error);
+        }
+    };
 
     const handleRangeChange = (range: string) => {
         setTimeRange(range);
@@ -59,10 +116,10 @@ const Dashboard: React.FC = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {[
-                    { title: 'Total Viewers', value: '4,200', change: '+12%', icon: <Users size={24} className="text-primary" /> },
-                    { title: 'Active Streams', value: '3', change: 'Live', icon: <Radio size={24} className="text-secondary" /> },
-                    { title: 'Total Videos', value: '128', change: '+4 this week', icon: <Video size={24} className="text-accent" /> },
-                    { title: 'Avg. Bitrate', value: '6.2 Mbps', change: 'Stable', icon: <Activity size={24} className="text-success" /> },
+                    { title: 'Current Status', value: stats.isLive ? 'LIVE' : 'Offline', change: stats.isLive ? 'Active' : 'Standby', icon: <Radio size={24} className={stats.isLive ? "text-danger animate-pulse" : "text-primary"} /> },
+                    { title: 'Active Streams', value: stats.activeStreams.toString(), change: 'Live', icon: <Activity size={24} className="text-secondary" /> },
+                    { title: 'Total Videos', value: stats.totalVideos.toString(), change: '+4 this week', icon: <Video size={24} className="text-accent" /> },
+                    { title: 'Total Viewers', value: stats.viewers, change: '+12%', icon: <Users size={24} className="text-primary" /> },
                 ].map((stat, idx) => (
                     <Card key={idx} hoverable>
                         <CardBody className="flex-between">
@@ -94,8 +151,8 @@ const Dashboard: React.FC = () => {
                                         key={range}
                                         onClick={() => handleRangeChange(range)}
                                         className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${timeRange === range
-                                                ? 'bg-primary text-white shadow-lg'
-                                                : 'text-muted hover:text-white hover:bg-white/5'
+                                            ? 'bg-primary text-white shadow-lg'
+                                            : 'text-muted hover:text-white hover:bg-white/5'
                                             }`}
                                     >
                                         {range}
@@ -145,18 +202,18 @@ const Dashboard: React.FC = () => {
                         </CardHeader>
                         <CardBody>
                             <div className="space-y-4">
-                                {[
-                                    { name: 'YouTube Live', status: 'Healthy', color: 'success' },
-                                    { name: 'Facebook Gaming', status: 'Healthy', color: 'success' },
-                                    { name: 'Twitch', status: 'Low Bitrate', color: 'warning' },
-                                ].map((dest, idx) => (
-                                    <div key={idx} className="flex-between p-3 rounded-lg bg-white/5 border border-white/5">
-                                        <span className="font-medium">{dest.name}</span>
-                                        <Badge variant={dest.color as any}>{dest.status}</Badge>
-                                    </div>
-                                ))}
+                                {destinations.length > 0 ? (
+                                    destinations.map((dest, idx) => (
+                                        <div key={idx} className="flex-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                            <span className="font-medium">{dest.name}</span>
+                                            <Badge variant="success">Healthy</Badge>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-4 text-sm text-muted">No active destinations</div>
+                                )}
                             </div>
-                            <Button variant="secondary" className="w-full mt-4">Manage Destinations</Button>
+                            <Button variant="secondary" className="w-full mt-4" onClick={() => window.location.href = '/destinations'}>Manage Destinations</Button>
                         </CardBody>
                     </Card>
                 </div>

@@ -7,7 +7,7 @@ import { X, Youtube, Twitch, Facebook, Server } from 'lucide-react';
 interface AddDestinationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (destination: { name: string; platform: string }) => void;
+    onAdd: (destination: { name: string; platform: string; streamKey: string }) => void;
 }
 
 const AddDestinationModal: React.FC<AddDestinationModalProps> = ({ isOpen, onClose, onAdd }) => {
@@ -31,6 +31,7 @@ const AddDestinationModal: React.FC<AddDestinationModalProps> = ({ isOpen, onClo
         onAdd({
             name,
             platform,
+            streamKey,
         });
 
         setName('');

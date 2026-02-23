@@ -1,16 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, CardTitle, CardFooter } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { User, Shield, Bell, Monitor, Globe, Save, Camera, Key } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [isSaving, setIsSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
 
-    const handleSave = () => {
+    // Profile State
+    const [displayName, setDisplayName] = useState('');
+    const [bio, setBio] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80');
+
+    // Streaming Defaults State
+    const [defaultTitle, setDefaultTitle] = useState('');
+    const [streamCategory, setStreamCategory] = useState('');
+    const [quality, setQuality] = useState('1080p 60fps (Recommended)');
+    const [latency, setLatency] = useState('Low');
+
+    useEffect(() => {
+        if (user) {
+            fetchProfile();
+        }
+    }, [user]);
+
+    const fetchProfile = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user?.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') throw error;
+            if (data) {
+                setDisplayName(data.display_name || '');
+                setBio(data.bio || '');
+                if (data.avatar_url) setAvatarUrl(data.avatar_url);
+                setDefaultTitle(data.default_title || '');
+                setStreamCategory(data.stream_category || '');
+                setQuality(data.streaming_quality || '1080p 60fps (Recommended)');
+                setLatency(data.latency_mode || 'Low');
+            }
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!user) return;
         setIsSaving(true);
-        setTimeout(() => setIsSaving(false), 1500);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    display_name: displayName,
+                    bio: bio,
+                    avatar_url: avatarUrl,
+                    default_title: defaultTitle,
+                    stream_category: streamCategory,
+                    streaming_quality: quality,
+                    latency_mode: latency,
+                    updated_at: new Date().toISOString(),
+                });
+
+            if (error) throw error;
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            alert('Failed to update profile.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const tabs = [
@@ -36,8 +105,8 @@ const Settings: React.FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${activeTab === tab.id
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                    : 'text-muted hover:text-white hover:bg-white/5'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                : 'text-muted hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             {tab.icon}
@@ -53,45 +122,55 @@ const Settings: React.FC = () => {
                             <CardHeader>
                                 <CardTitle>Profile Information</CardTitle>
                             </CardHeader>
-                            <CardBody className="space-y-6">
-                                <div className="flex items-center gap-6 mb-4">
-                                    <div className="relative group">
-                                        <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[var(--border-color)] group-hover:border-primary transition-colors">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
-                                                alt="Avatar"
-                                                className="w-full h-full object-cover"
+                            {loading ? (
+                                <CardBody className="py-20 text-center text-muted">Loading profile...</CardBody>
+                            ) : (
+                                <CardBody className="space-y-6">
+                                    <div className="flex items-center gap-6 mb-4">
+                                        <div className="relative group">
+                                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-[var(--border-color)] group-hover:border-primary transition-colors">
+                                                <img
+                                                    src={avatarUrl}
+                                                    alt="Avatar"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl cursor-pointer">
+                                                <Camera size={24} className="text-white" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-semibold mb-1">{displayName || 'Anonymous User'}</h4>
+                                            <p className="text-sm text-muted">{user?.email}</p>
+                                            <Button variant="secondary" className="mt-2 text-xs py-1.5 h-auto">Change Avatar</Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="input-group">
+                                            <label className="input-label">Display Name</label>
+                                            <Input
+                                                value={displayName}
+                                                onChange={(e) => setDisplayName(e.target.value)}
+                                                placeholder="Enter display name"
                                             />
                                         </div>
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl cursor-pointer">
-                                            <Camera size={24} className="text-white" />
+                                        <div className="input-group">
+                                            <label className="input-label">Email Address (Read Only)</label>
+                                            <Input value={user?.email || ''} type="email" readOnly disabled className="opacity-50" />
+                                        </div>
+                                        <div className="input-group md:col-span-2">
+                                            <label className="input-label">Bio</label>
+                                            <textarea
+                                                className="w-full bg-white/5 border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-main)] outline-none focus:border-[var(--primary)] transition-colors min-h-[100px] resize-none"
+                                                value={bio}
+                                                onChange={(e) => setBio(e.target.value)}
+                                                placeholder="Tell us about yourself..."
+                                            />
                                         </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-lg font-semibold mb-1">Alex "Volt" Rivers</h4>
-                                        <p className="text-sm text-muted">Lead Developer & Tech Content Creator</p>
-                                        <Button variant="secondary" className="mt-2 text-xs py-1.5 h-auto">Change Avatar</Button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="input-group">
-                                        <label className="input-label">Display Name</label>
-                                        <Input defaultValue="Volt Streamer" />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="input-label">Email Address</label>
-                                        <Input defaultValue="alex@streampulse.io" type="email" />
-                                    </div>
-                                    <div className="input-group md:col-span-2">
-                                        <label className="input-label">Bio</label>
-                                        <textarea
-                                            className="w-full bg-white/5 border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-main)] outline-none focus:border-[var(--primary)] transition-colors min-h-[100px] resize-none"
-                                            defaultValue="Tech enthusiast and casual gamer. Sharing my web development journey one stream at a time."
-                                        />
-                                    </div>
-                                </div>
-                            </CardBody>
+                                </CardBody>
+                            )}
                             <CardFooter className="flex justify-end p-4">
                                 <Button
                                     icon={isSaving ? undefined : <Save size={18} />}
@@ -113,15 +192,27 @@ const Settings: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="input-group">
                                         <label className="input-label">Default Title</label>
-                                        <Input placeholder="Exciting Live Stream!" />
+                                        <Input
+                                            placeholder="Exciting Live Stream!"
+                                            value={defaultTitle}
+                                            onChange={(e) => setDefaultTitle(e.target.value)}
+                                        />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Stream Category</label>
-                                        <Input placeholder="Programing / Technology" />
+                                        <Input
+                                            placeholder="Programing / Technology"
+                                            value={streamCategory}
+                                            onChange={(e) => setStreamCategory(e.target.value)}
+                                        />
                                     </div>
                                     <div className="input-group">
                                         <label className="input-label">Standard Quality</label>
-                                        <select className="w-full bg-white/5 border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-main)] outline-none focus:border-[var(--primary)] transition-colors">
+                                        <select
+                                            className="w-full bg-white/5 border border-[var(--border-color)] rounded-lg p-3 text-[var(--text-main)] outline-none focus:border-[var(--primary)] transition-colors"
+                                            value={quality}
+                                            onChange={(e) => setQuality(e.target.value)}
+                                        >
                                             <option>1080p 60fps (Recommended)</option>
                                             <option>720p 60fps</option>
                                             <option>4k 30fps</option>
@@ -130,8 +221,16 @@ const Settings: React.FC = () => {
                                     <div className="input-group">
                                         <label className="input-label">Broadcast Latency</label>
                                         <div className="flex gap-3">
-                                            <Button variant="primary" className="flex-1 text-xs">Low</Button>
-                                            <Button variant="secondary" className="flex-1 text-xs">Standard</Button>
+                                            <Button
+                                                variant={latency === 'Low' ? 'primary' : 'secondary'}
+                                                className="flex-1 text-xs"
+                                                onClick={() => setLatency('Low')}
+                                            >Low</Button>
+                                            <Button
+                                                variant={latency === 'Standard' ? 'primary' : 'secondary'}
+                                                className="flex-1 text-xs"
+                                                onClick={() => setLatency('Standard')}
+                                            >Standard</Button>
                                         </div>
                                     </div>
                                 </div>
