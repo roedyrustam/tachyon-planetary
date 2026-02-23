@@ -53,8 +53,8 @@ const AddVideoModal: React.FC<AddVideoModalProps> = ({ isOpen, onClose, onAdd })
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content max-w-lg border-white/5 shadow-2xl overflow-hidden ring-1 ring-white/10">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={onClose}>
+            <div className="relative w-full max-w-lg bg-[#0d1017] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in" onClick={e => e.stopPropagation()}>
                 {/* Visual Header Accent */}
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary via-secondary to-accent" />
 
