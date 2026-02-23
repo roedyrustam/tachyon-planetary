@@ -39,7 +39,21 @@ const Videos: React.FC = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setVideos(data || []);
+
+            // Process videos to handle Resilience Mode (URL stored in thumbnail)
+            const processedData = (data || []).map((v: any) => {
+                if (v.thumbnail && v.thumbnail.startsWith('[DATA_URL]:')) {
+                    const url = v.thumbnail.replace('[DATA_URL]:', '');
+                    return {
+                        ...v,
+                        url: url,
+                        thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                    };
+                }
+                return v;
+            });
+
+            setVideos(processedData);
         } catch (error) {
             console.error('Error fetching videos:', error);
         } finally {
@@ -80,25 +94,53 @@ const Videos: React.FC = () => {
         if (!user) return;
 
         // In a real app, we'd add columns 'source_type' and 'source_url'
-        // For this demo, we'll store the URL as the thumbnail if it's a Drive link
-        // or just mock the insertion.
-        const { data, error } = await supabase
-            .from('videos')
-            .insert([{
-                user_id: user.id,
-                title: videoData.title,
-                duration: videoData.duration,
-                url: videoData.url,
-                thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-                views: "0",
-                size: "Cloud",
-                date: "Just now"
-            }])
-            .select();
+        try {
+            const { data, error } = await supabase
+                .from('videos')
+                .insert([{
+                    user_id: user.id,
+                    title: videoData.title,
+                    duration: videoData.duration,
+                    url: videoData.url,
+                    thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+                    views: "0",
+                    size: "Cloud",
+                    date: "Just now"
+                }])
+                .select();
 
-        if (error) throw error;
-        if (data) {
-            setVideos([data[0], ...videos]);
+            if (error) throw error;
+            if (data) {
+                setVideos([data[0], ...videos]);
+            }
+        } catch (err: any) {
+            // Resilience Mode Fallback: If URL column doesn't exist, pack it into thumbnail
+            if (err.message?.includes('column "url" of relation "videos" does not exist') || err.code === '42703') {
+                const { data, error: retryError } = await supabase
+                    .from('videos')
+                    .insert([{
+                        user_id: user.id,
+                        title: videoData.title,
+                        duration: videoData.duration,
+                        thumbnail: `[DATA_URL]:${videoData.url}`,
+                        views: "0",
+                        size: "Cloud",
+                        date: "Just now"
+                    }])
+                    .select();
+
+                if (retryError) throw retryError;
+                if (data) {
+                    const processed = {
+                        ...data[0],
+                        url: videoData.url,
+                        thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                    };
+                    setVideos([processed, ...videos]);
+                }
+            } else {
+                throw err;
+            }
         }
     };
 
