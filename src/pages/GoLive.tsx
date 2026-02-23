@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe, Volume2, VolumeX, Monitor, Grid, Square, Layout, List } from 'lucide-react';
+import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe, Volume2, VolumeX, Monitor, Grid, Square, Layout, List, Cpu, Info } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
@@ -401,6 +401,31 @@ const GoLive: React.FC = () => {
                                     </div>
                                 </div>
                             ))}
+                        </CardBody>
+                    </Card>
+
+                    {/* Media Capabilities Info */}
+                    <Card className="border-secondary/20 bg-secondary/5">
+                        <CardHeader className="py-3">
+                            <CardTitle className="text-xs font-bold flex items-center gap-2 text-secondary uppercase tracking-widest">
+                                <Cpu size={14} /> System Capabilities
+                            </CardTitle>
+                        </CardHeader>
+                        <CardBody className="py-3 space-y-3">
+                            <div className="flex-between">
+                                <div className="flex items-center gap-2 text-[10px] text-muted font-medium">
+                                    <Badge variant="info" className="scale-75 origin-left">VIDEO</Badge>
+                                    AVC/H.264, HEVC/H.265
+                                </div>
+                                <Info size={12} className="text-muted/50" />
+                            </div>
+                            <div className="flex-between">
+                                <div className="flex items-center gap-2 text-[10px] text-muted font-medium">
+                                    <Badge variant="success" className="scale-75 origin-left">AUDIO</Badge>
+                                    AAC-LC, MP3
+                                </div>
+                                <Info size={12} className="text-muted/50" />
+                            </div>
                         </CardBody>
                     </Card>
 

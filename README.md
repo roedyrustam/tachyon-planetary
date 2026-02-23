@@ -22,6 +22,7 @@
 - **Icons**: Lucide React
 - **Charts**: Recharts
 - **Styling**: Native CSS Variables + Glassmorphism UI Kit
+- **Codecs**: AVC/H.264, HEVC/H.265, AAC, MP3
 
 ## 🚀 Quick Start
 

@@ -36,6 +36,12 @@
 - Calendar-based view of upcoming events.
 
 ## 4. Technical Requirements
+### 4.1 Media Specifications
+- **Video Codecs**: AVC/H.264, HEVC/H.265 (UHD support).
+- **Audio Codecs**: AAC-LC, MP3.
+- **Protocol Support**: RTMP, RTMPS, WebRTC (Preview).
+
+### 4.2 System Requirements
 - **Performance**: High frame-rate UI components and real-time chart updates.
 - **UI/UX**: Dark-themed, futuristic "Glassmorphism" aesthetic for professional appeal.
 - **Responsiveness**: Optimized for desktop and workstation setups.

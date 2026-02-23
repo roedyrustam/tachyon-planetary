@@ -48,3 +48,13 @@ Defined in `src/index.css`:
 - Integration with streaming APIs (RTMP/WebRTC).
 - WebSocket connection for Unified Chat.
 - Backend services for user persistence and analytics storage.
+
+## 7. Media Specifications
+### 7.1 Supported Codecs
+- **Video**: `H.264 (AVC)`, `H.265 (HEVC)`
+- **Audio**: `AAC`, `MP3`
+
+### 7.2 Streaming Configuration
+- **Max Resolution**: 4K (HEVC)
+- **Max Bitrate**: 20 Mbps
+- **Keyframe Interval**: 2 seconds (Recommended)
