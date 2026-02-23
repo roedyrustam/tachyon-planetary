@@ -44,8 +44,9 @@ const AddVideoModal: React.FC<AddVideoModalProps> = ({ isOpen, onClose, onAdd })
             window.dispatchEvent(new CustomEvent('show-toast', {
                 detail: { message: 'Video link added to library!', type: 'success' }
             }));
-        } catch (err: any) {
-            setError(err.message || 'Failed to add video link');
+        } catch (err: unknown) {
+            const error = err as Error;
+            setError(error.message || 'Failed to add video link');
         } finally {
             setLoading(false);
         }

@@ -65,7 +65,7 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'chat_messages'
-            }, (payload: { new: any }) => {
+            }, (payload: { new: { id: string; display_name: string; text: string; platform: string; created_at: string; is_super_chat: boolean; amount?: string } }) => {
                 const newMessage = payload.new;
                 setMessages(prev => [...prev, {
                     id: newMessage.id,

@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
                 schema: 'public',
                 table: 'profiles',
                 filter: `id=eq.${user?.id}`
-            }, (payload: any) => {
+            }, (payload: { new: { is_live: boolean } }) => {
                 if (payload.new && 'is_live' in payload.new) {
                     setStats(prev => ({ ...prev, isLive: payload.new.is_live }));
                 }
