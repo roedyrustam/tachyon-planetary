@@ -40,6 +40,7 @@ const GoLive: React.FC = () => {
     const [selectedDest, setSelectedDest] = useState<string>('');
     const [ffmpegCommand, setFfmpegCommand] = useState('');
     const [streamMode, setStreamMode] = useState<'standard' | 'adaptive'>('standard');
+    const [activeOverlays, setActiveOverlays] = useState<string[]>([]);
 
     // WebRTC & Hardware State
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -209,6 +210,19 @@ const GoLive: React.FC = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLive]);
 
+    useEffect(() => {
+        const syncOverlays = () => {
+            const saved = localStorage.getItem('activeOverlays');
+            if (saved) {
+                setActiveOverlays(JSON.parse(saved));
+            }
+        };
+
+        syncOverlays();
+        window.addEventListener('overlay-change', syncOverlays);
+        return () => window.removeEventListener('overlay-change', syncOverlays);
+    }, []);
+
     const formatUptime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
@@ -314,19 +328,52 @@ const GoLive: React.FC = () => {
                 <div className="xl:col-span-3 space-y-6">
 
                     {/* Video Player Preview */}
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-2xl group">
+                    <div className={`relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-2xl group transition-all duration-500 ${activeScene === 'Intermission' ? 'opacity-50 ring-4 ring-primary/30' : ''}`}>
                         {camEnabled ? (
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="w-full h-full object-cover scale-x-[-1]" // Flip for mirror effect
-                            />
+                            <div className={`w-full h-full transition-all duration-700 ${activeScene === 'Screen + Cam' ? 'scale-[0.85] translate-x-[10%] translate-y-[10%] rounded-lg overflow-hidden border-2 border-primary/50' : 'scale-100'}`}>
+                                <video
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className="w-full h-full object-cover scale-x-[-1]" // Flip for mirror effect
+                                />
+                            </div>
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted">
                                 <VidIcon size={64} className="mb-4 opacity-50" />
                                 <p className="font-medium">Camera Disabled</p>
+                            </div>
+                        )}
+
+                        {/* Scene Specific Overlays */}
+                        {activeScene === 'Intermission' && (
+                            <div className="absolute inset-0 flex-center flex-col bg-primary/10 backdrop-blur-[2px] animate-pulse">
+                                <h2 className="text-4xl font-black text-white tracking-[0.2em] uppercase italic">Be Right Back</h2>
+                                <p className="text-primary font-bold mt-2 uppercase tracking-widest text-sm">Stream Intermission</p>
+                            </div>
+                        )}
+
+                        {activeScene === 'Ending Soon' && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-secondary/40 to-transparent p-12 flex flex-col justify-end">
+                                <h2 className="text-5xl font-black text-white italic leading-tight">THANKS FOR<br /><span className="text-secondary text-gradient">WATCHING!</span></h2>
+                                <p className="text-muted font-medium mt-4">Broadcast ending shortly...</p>
+                            </div>
+                        )}
+
+                        {/* Graphic Overlays */}
+                        {activeOverlays.includes('Lower Third') && (
+                            <div className="absolute bottom-16 left-8 bg-black/60 backdrop-blur-md border-l-4 border-primary px-6 py-3 rounded-r-xl shadow-2xl animate-fade-in translate-y-0 group-hover:-translate-y-4 transition-transform">
+                                <h4 className="text-primary font-bold text-xs uppercase tracking-widest leading-none mb-1">Live Now</h4>
+                                <p className="text-white font-bold text-lg">{streamingDefaults.title}</p>
+                            </div>
+                        )}
+
+                        {activeOverlays.includes('Alert Box') && isLive && (
+                            <div className="absolute top-8 right-8 animate-bounce">
+                                <Badge variant="success" className="bg-success text-white border-white/20 shadow-[0_0_20px_rgba(16,185,129,0.4)] px-4 py-2 text-sm font-bold">
+                                    NEW FOLLOWER!
+                                </Badge>
                             </div>
                         )}
 

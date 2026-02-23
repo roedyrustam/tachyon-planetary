@@ -6,6 +6,21 @@ import { Copy, ExternalLink, Layout, MessageSquare, Zap, Bell, Check } from 'luc
 
 const Overlays: React.FC = () => {
     const [copied, setCopied] = useState<string | null>(null);
+    const [activeOverlays, setActiveOverlays] = useState<string[]>(() => {
+        const saved = localStorage.getItem('activeOverlays');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const toggleOverlay = (name: string) => {
+        const newActive = activeOverlays.includes(name)
+            ? activeOverlays.filter(o => o !== name)
+            : [...activeOverlays, name];
+
+        setActiveOverlays(newActive);
+        localStorage.setItem('activeOverlays', JSON.stringify(newActive));
+
+        window.dispatchEvent(new CustomEvent('overlay-change'));
+    };
 
     const handleCopy = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
@@ -85,8 +100,12 @@ const Overlays: React.FC = () => {
                                             />
                                         </div>
                                         <div className="flex gap-2">
-                                            <Button variant="primary" className="flex-1 gap-2">
-                                                Customize
+                                            <Button
+                                                variant={activeOverlays.includes(item.name) ? "danger" : "primary"}
+                                                className="flex-1 gap-2"
+                                                onClick={() => toggleOverlay(item.name)}
+                                            >
+                                                {activeOverlays.includes(item.name) ? "Disable" : "Enable"}
                                             </Button>
                                             <Button variant="secondary" iconOnly icon={<ExternalLink size={18} />} />
                                         </div>
