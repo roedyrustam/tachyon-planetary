@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardBody, CardHeader, CardTitle, } from '../components/ui/Card';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Line, Legend, Area, AreaChart
 } from 'recharts';
 import { Users, Clock, MessageSquare, TrendingUp, Globe, Smartphone, Monitor } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const engagementData = [
     { time: '0m', viewers: 1200, chat: 45 },
@@ -41,8 +43,42 @@ const revenueData = [
     { day: 'Sun', superchat: 950, bits: 400, stars: 380 },
 ];
 
+
+
 const Analytics: React.FC = () => {
     const [activeTab, setActiveTab] = React.useState<'overview' | 'revenue'>('overview');
+    const { user } = useAuth();
+    const [stats, setStats] = useState({
+        totalVideos: 0,
+        totalDestinations: 0,
+        engagementRate: '8.4%',
+        peakViewers: '5,200',
+        activeStreams: 0
+    });
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchAnalytics = async () => {
+            try {
+                const [videoRes, destRes] = await Promise.all([
+                    supabase.from('videos').select('id', { count: 'exact' }),
+                    supabase.from('destinations').select('id', { count: 'exact' })
+                ]);
+
+                setStats(prev => ({
+                    ...prev,
+                    totalVideos: videoRes.count || 0,
+                    totalDestinations: destRes.count || 0
+                }));
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+            }
+        };
+
+        fetchAnalytics();
+    }, [user]);
+
     return (
         <div className="animate-fade-in">
             <div className="page-header mb-8 flex-between">
@@ -71,10 +107,10 @@ const Analytics: React.FC = () => {
                     {/* Metric Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {[
-                            { title: 'Total Watch Time', value: '1,240h', change: '+18%', icon: <Clock size={20} className="text-primary" /> },
-                            { title: 'Engagement Rate', value: '8.4%', change: '+2.1%', icon: <MessageSquare size={20} className="text-secondary" /> },
-                            { title: 'New Followers', value: '1,842', change: '+450', icon: <TrendingUp size={20} className="text-accent" /> },
-                            { title: 'Peak Viewers', value: '5,200', change: 'Stable', icon: <Users size={20} className="text-success" /> },
+                            { title: 'Library Assets', value: stats.totalVideos.toString(), change: '+4 this week', icon: <Clock size={20} className="text-primary" /> },
+                            { title: 'Engagement Rate', value: stats.engagementRate, change: '+2.1%', icon: <MessageSquare size={20} className="text-secondary" /> },
+                            { title: 'Broadcast Targets', value: stats.totalDestinations.toString(), change: 'Unified', icon: <TrendingUp size={20} className="text-accent" /> },
+                            { title: 'Peak Viewers', value: stats.peakViewers, change: 'Stable', icon: <Users size={20} className="text-success" /> },
                         ].map((stat, idx) => (
                             <Card key={idx}>
                                 <CardBody className="flex-between">

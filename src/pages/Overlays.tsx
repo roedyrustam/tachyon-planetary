@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -6,6 +7,7 @@ import { Copy, ExternalLink, Layout, MessageSquare, Zap, Bell, Check } from 'luc
 
 const Overlays: React.FC = () => {
     const [copied, setCopied] = useState<string | null>(null);
+    const { user } = useAuth();
     const [activeOverlays, setActiveOverlays] = useState<string[]>(() => {
         const saved = localStorage.getItem('activeOverlays');
         return saved ? JSON.parse(saved) : [];
@@ -33,7 +35,7 @@ const Overlays: React.FC = () => {
             id: 'chat',
             name: 'Unified Chat Overlay',
             description: 'A transparent, animated chat overlay for your stream.',
-            url: 'https://streampulse.app/overlay/chat/user-123',
+            url: `https://streampulse.app/overlay/chat/${user?.id || 'guest'}`,
             icon: <MessageSquare className="text-primary" />,
             preview: 'https://images.unsplash.com/photo-1614850523296-e8c04a0697ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
         },
@@ -41,7 +43,7 @@ const Overlays: React.FC = () => {
             id: 'alert',
             name: 'Monetization Alerts',
             description: 'Show real-time popups for SuperChats and Bits.',
-            url: 'https://streampulse.app/overlay/alerts/user-123',
+            url: `https://streampulse.app/overlay/alerts/${user?.id || 'guest'}`,
             icon: <Zap className="text-secondary" />,
             preview: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
         },
@@ -49,7 +51,7 @@ const Overlays: React.FC = () => {
             id: 'goal',
             name: 'Live Goal Tracker',
             description: 'Progress bars for follower or donation goals.',
-            url: 'https://streampulse.app/overlay/goals/user-123',
+            url: `https://streampulse.app/overlay/goals/${user?.id || 'guest'}`,
             icon: <Layout className="text-accent" />,
             preview: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
         }
