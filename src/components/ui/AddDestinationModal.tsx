@@ -7,7 +7,7 @@ import { X, Youtube, Twitch, Facebook, Server } from 'lucide-react';
 interface AddDestinationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (destination: { name: string; platform: string; icon: React.ReactNode }) => void;
+    onAdd: (destination: { name: string; platform: string }) => void;
 }
 
 const AddDestinationModal: React.FC<AddDestinationModalProps> = ({ isOpen, onClose, onAdd }) => {
@@ -28,11 +28,9 @@ const AddDestinationModal: React.FC<AddDestinationModalProps> = ({ isOpen, onClo
         e.preventDefault();
         if (!name || !streamKey) return;
 
-        const selectedPlatform = platforms.find(p => p.id === platform);
         onAdd({
             name,
             platform,
-            icon: selectedPlatform?.icon || <Server size={20} />,
         });
 
         setName('');
@@ -67,8 +65,8 @@ const AddDestinationModal: React.FC<AddDestinationModalProps> = ({ isOpen, onClo
                                         key={p.id}
                                         onClick={() => setPlatform(p.id)}
                                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${platform === p.id
-                                                ? 'border-primary bg-primary/10 text-white'
-                                                : 'border-white/5 bg-white/5 text-muted hover:bg-white/10'
+                                            ? 'border-primary bg-primary/10 text-white'
+                                            : 'border-white/5 bg-white/5 text-muted hover:bg-white/10'
                                             }`}
                                     >
                                         {p.icon}

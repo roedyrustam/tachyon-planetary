@@ -1,46 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, CardFooter } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Badge from '../components/ui/Badge';
 import { Youtube, Facebook, Twitch, Server, Plus, Settings, Power } from 'lucide-react';
 import AddDestinationModal from '../components/ui/AddDestinationModal';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface Destination {
-    id: number;
+    id: string;
     name: string;
     platform: string;
-    icon: React.ReactNode;
     active: boolean;
-    connected: boolean;
+    stream_key?: string;
 }
 
-const initialDestinations: Destination[] = [
-    { id: 1, name: 'Main Channel', platform: 'YouTube', icon: <Youtube size={24} color="#FF0000" />, active: true, connected: true },
-    { id: 2, name: 'Gaming Page', platform: 'Facebook', icon: <Facebook size={24} color="#1877F2" />, active: true, connected: true },
-    { id: 3, name: 'StreamPulseTV', platform: 'Twitch', icon: <Twitch size={24} color="#9146FF" />, active: false, connected: true },
-    { id: 4, name: 'Custom Server', platform: 'RTMP', icon: <Server size={24} className="text-muted" />, active: false, connected: false },
-];
+const getPlatformIcon = (platform: string) => {
+    switch (platform) {
+        case 'YouTube': return <Youtube size={24} color="#FF0000" />;
+        case 'Facebook': return <Facebook size={24} color="#1877F2" />;
+        case 'Twitch': return <Twitch size={24} color="#9146FF" />;
+        default: return <Server size={24} className="text-muted" />;
+    }
+};
 
 const Destinations: React.FC = () => {
-    const [destinations, setDestinations] = useState<Destination[]>(initialDestinations);
+    const { user } = useAuth();
+    const [destinations, setDestinations] = useState<Destination[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const toggleActive = (id: number) => {
-        setDestinations(destinations.map(d =>
-            d.id === id && d.connected ? { ...d, active: !d.active } : d
-        ));
+    useEffect(() => {
+        if (!user) return;
+        fetchDestinations();
+    }, [user]);
+
+    const fetchDestinations = async () => {
+        const { data, error } = await supabase
+            .from('destinations')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (error) console.error('Error fetching destinations:', error);
+        else setDestinations(data || []);
+        setLoading(false);
     };
 
-    const handleAddDestination = (newDest: { name: string; platform: string; icon: React.ReactNode }) => {
-        setDestinations([
-            ...destinations,
-            {
-                id: Date.now(),
-                ...newDest,
-                active: false,
-                connected: true
-            }
-        ]);
+    const toggleActive = async (id: string, currentStatus: boolean) => {
+        const { error } = await supabase
+            .from('destinations')
+            .update({ active: !currentStatus })
+            .eq('id', id);
+
+        if (error) console.error('Error updating destination:', error);
+        else fetchDestinations();
+    };
+
+    const handleAddDestination = async (newDest: { name: string; platform: string }) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('destinations')
+            .insert([{
+                user_id: user.id,
+                name: newDest.name,
+                platform: newDest.platform,
+                active: false
+            }]);
+
+        if (error) console.error('Error adding destination:', error);
+        else fetchDestinations();
     };
 
     return (
@@ -54,49 +82,41 @@ const Destinations: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                {destinations.map(dest => (
-                    <Card key={dest.id} hoverable className={!dest.connected ? 'opacity-70' : ''}>
+                {loading ? (
+                    <div className="col-span-full py-20 text-center animate-pulse text-muted">Loading destinations...</div>
+                ) : destinations.map(dest => (
+                    <Card key={dest.id} hoverable>
                         <CardHeader className="flex-between">
                             <div className="flex-center gap-3">
                                 <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                                    {dest.icon}
+                                    {getPlatformIcon(dest.platform)}
                                 </div>
                                 <div>
                                     <h3 className="font-semibold">{dest.name}</h3>
                                     <p className="text-xs text-muted">{dest.platform}</p>
                                 </div>
                             </div>
-                            {dest.connected ? (
-                                <Button
-                                    iconOnly
-                                    variant={dest.active ? 'primary' : 'secondary'}
-                                    icon={<Power size={18} />}
-                                    onClick={() => toggleActive(dest.id)}
-                                    title={dest.active ? 'Deactivate' : 'Activate'}
-                                    className={dest.active ? 'shadow-[0_0_15px_rgba(99,102,241,0.5)]' : ''}
-                                />
-                            ) : (
-                                <Badge variant="warning">Not Connected</Badge>
-                            )}
+                            <Button
+                                iconOnly
+                                variant={dest.active ? 'primary' : 'secondary'}
+                                icon={<Power size={18} />}
+                                onClick={() => toggleActive(dest.id, dest.active)}
+                                title={dest.active ? 'Deactivate' : 'Activate'}
+                                className={dest.active ? 'shadow-[0_0_15px_rgba(99,102,241,0.5)]' : ''}
+                            />
                         </CardHeader>
                         <CardBody>
                             <div className="space-y-3">
                                 <div className="flex-between text-sm">
                                     <span className="text-muted">Status</span>
-                                    {dest.connected ? (
-                                        <span className={dest.active ? 'text-success font-medium' : 'text-muted'}>
-                                            {dest.active ? 'Ready to Stream' : 'Inactive'}
-                                        </span>
-                                    ) : (
-                                        <span className="text-warning">Needs Setup</span>
-                                    )}
+                                    <span className={dest.active ? 'text-success font-medium' : 'text-muted'}>
+                                        {dest.active ? 'Ready to Stream' : 'Inactive'}
+                                    </span>
                                 </div>
-                                {dest.connected && (
-                                    <div className="flex-between text-sm">
-                                        <span className="text-muted">Stream Key</span>
-                                        <span className="font-mono">••••••••••••</span>
-                                    </div>
-                                )}
+                                <div className="flex-between text-sm">
+                                    <span className="text-muted">Stream Key</span>
+                                    <span className="font-mono">••••••••••••</span>
+                                </div>
                             </div>
                         </CardBody>
                         <CardFooter className="flex-between">

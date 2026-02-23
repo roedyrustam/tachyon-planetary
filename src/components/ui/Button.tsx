@@ -5,6 +5,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'danger';
     icon?: ReactNode;
     iconOnly?: boolean;
+    loading?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -12,19 +13,24 @@ const Button: React.FC<ButtonProps> = ({
     variant = 'primary',
     icon,
     iconOnly = false,
+    loading = false,
     className = '',
+    disabled,
     ...props
 }) => {
     const baseClass = 'btn';
     const variantClass = `btn-${variant}`;
     const iconClass = iconOnly ? 'btn-icon-only' : '';
+    const isLoadingClass = loading ? 'btn-loading' : '';
 
     return (
         <button
-            className={`${baseClass} ${variantClass} ${iconClass} ${className}`}
+            className={`${baseClass} ${variantClass} ${iconClass} ${isLoadingClass} ${className}`}
+            disabled={disabled || loading}
             {...props}
         >
-            {icon && <span className="flex-center">{icon}</span>}
+            {loading && <span className="animate-spin mr-2">◌</span>}
+            {!loading && icon && <span className="flex-center">{icon}</span>}
             {!iconOnly && children}
         </button>
     );

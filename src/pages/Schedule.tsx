@@ -1,46 +1,67 @@
-import React, { useState } from 'react';
-import { Card, CardBody, CardHeader, CardTitle, } from '../components/ui/Card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Calendar as CalendarIcon, Clock, Users, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Plus, Edit2, Trash2 } from 'lucide-react';
 import AddScheduleModal from '../components/ui/AddScheduleModal';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface Schedule {
-    id: number;
+    id: string;
     title: string;
     date: string;
     time: string;
     duration: string;
-    expectedViewers: string;
-    status: 'upcoming' | 'draft' | 'past';
     platforms: string[];
 }
 
-const initialSchedules: Schedule[] = [
-    { id: 1, title: 'Weekly Q&A - Web Development', date: '2026-10-25', time: '14:00', duration: '1h 30m', expectedViewers: '5k+', status: 'upcoming', platforms: ['YouTube', 'Twitch'] },
-    { id: 2, title: 'Live Coding: Building a React App', date: '2026-10-26', time: '20:00', duration: '2h 00m', expectedViewers: '3k+', status: 'draft', platforms: ['YouTube'] },
-    { id: 3, title: 'Interview with Tech Lead', date: '2026-10-28', time: '18:00', duration: '1h 00m', expectedViewers: '10k+', status: 'upcoming', platforms: ['YouTube', 'Facebook', 'Twitch'] },
-    { id: 4, title: 'Product Launch Showcase', date: '2026-11-01', time: '10:00', duration: '45m', expectedViewers: '25k+', status: 'upcoming', platforms: ['Custom RTMP', 'YouTube'] },
-];
-
 const SchedulePage: React.FC = () => {
-    const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+    const { user } = useAuth();
+    const [schedules, setSchedules] = useState<Schedule[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleAddSchedule = (newSchedule: Omit<Schedule, 'id' | 'status'>) => {
-        setSchedules([
-            ...schedules,
-            {
-                ...newSchedule,
-                id: Date.now(),
-                status: 'upcoming'
-            }
-        ]);
+    useEffect(() => {
+        if (!user) return;
+        fetchSchedules();
+    }, [user]);
+
+    const fetchSchedules = async () => {
+        const { data, error } = await supabase
+            .from('schedules')
+            .select('*')
+            .order('date', { ascending: true })
+            .order('time', { ascending: true });
+
+        if (error) console.error('Error fetching schedules:', error);
+        else setSchedules(data || []);
+        setLoading(false);
     };
 
-    const handleDelete = (id: number) => {
+    const handleAddSchedule = async (newSchedule: Omit<Schedule, 'id'>) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('schedules')
+            .insert([{
+                user_id: user.id,
+                ...newSchedule
+            }]);
+
+        if (error) console.error('Error adding schedule:', error);
+        else fetchSchedules();
+    };
+
+    const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to cancel this scheduled broadcast?')) {
-            setSchedules(schedules.filter(s => s.id !== id));
+            const { error } = await supabase
+                .from('schedules')
+                .delete()
+                .eq('id', id);
+
+            if (error) console.error('Error deleting schedule:', error);
+            else fetchSchedules();
         }
     };
 
@@ -101,15 +122,7 @@ const SchedulePage: React.FC = () => {
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                                     <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" defaultChecked />
-                                    Upcoming ({schedules.filter(s => s.status === 'upcoming').length})
-                                </label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" defaultChecked />
-                                    Drafts ({schedules.filter(s => s.status === 'draft').length})
-                                </label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" />
-                                    Past Streams (42)
+                                    All Scheduled ({schedules.length})
                                 </label>
                             </div>
                         </CardBody>
@@ -120,7 +133,9 @@ const SchedulePage: React.FC = () => {
                 <div className="xl:col-span-3 space-y-4">
                     <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
 
-                    {schedules.map((schedule) => (
+                    {loading ? (
+                        <div className="py-20 text-center animate-pulse text-muted">Loading your schedule...</div>
+                    ) : schedules.map((schedule) => (
                         <Card key={schedule.id} className="border-l-4 border-l-primary hover:border-l-secondary transition-colors" hoverable>
                             <CardBody className="p-5 flex flex-col md:flex-row gap-4 md:items-center justify-between">
 
@@ -135,16 +150,13 @@ const SchedulePage: React.FC = () => {
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
                                             <h3 className="text-lg font-semibold">{schedule.title}</h3>
-                                            {schedule.status === 'upcoming' ? (
-                                                <Badge variant="success">Upcoming</Badge>
-                                            ) : (
-                                                <Badge variant="warning">Draft</Badge>
-                                            )}
+                                            <Badge variant={new Date(schedule.date) >= new Date() ? 'success' : 'info'}>
+                                                {new Date(schedule.date) >= new Date() ? 'Upcoming' : 'Past'}
+                                            </Badge>
                                         </div>
 
                                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted mt-2">
                                             <span className="flex items-center gap-1.5"><Clock size={14} /> {schedule.time} ({schedule.duration})</span>
-                                            <span className="flex items-center gap-1.5"><Users size={14} /> {schedule.expectedViewers}</span>
                                         </div>
                                     </div>
                                 </div>

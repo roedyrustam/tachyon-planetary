@@ -12,7 +12,6 @@ interface AddScheduleModalProps {
         date: string;
         time: string;
         duration: string;
-        expectedViewers: string;
         platforms: string[]
     }) => void;
 }
@@ -50,7 +49,6 @@ const AddScheduleModal: React.FC<AddScheduleModalProps> = ({ isOpen, onClose, on
             date,
             time,
             duration,
-            expectedViewers: 'Est. 1k+',
             platforms: selectedPlatforms,
         });
 
