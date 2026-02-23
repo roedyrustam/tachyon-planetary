@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe, Volume2, VolumeX, Monitor, Grid, Square, Layout, List, Cpu, Info } from 'lucide-react';
+import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe, Volume2, VolumeX, Monitor, Grid, Square, Layout, List, Cpu, Info, Terminal, Copy } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
@@ -36,6 +36,20 @@ const GoLive: React.FC = () => {
     const [audioLevels, setAudioLevels] = useState({ mic: 75, system: 60, music: 40 });
     const [vuLevels, setVuLevels] = useState({ mic: 0, system: 0, music: 0 });
     const [activeScene, setActiveScene] = useState('Camera Only');
+    const [destinations, setDestinations] = useState<{ id: string; name: string; url: string; stream_key: string }[]>([]);
+    const [selectedDest, setSelectedDest] = useState<string>('');
+    const [ffmpegCommand, setFfmpegCommand] = useState('');
+
+    // WebRTC & Hardware State
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [stream, setStream] = useState<MediaStream | null>(null);
+    const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+    const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+    const [selectedCamera, setSelectedCamera] = useState<string>('');
+    const [selectedMic, setSelectedMic] = useState<string>('');
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
 
     useEffect(() => {
         if (!user) return;
@@ -56,35 +70,135 @@ const GoLive: React.FC = () => {
             }
         };
 
+        const fetchDestinations = async () => {
+            const { data } = await supabase
+                .from('destinations')
+                .select('*')
+                .eq('active', true);
+            if (data) {
+                setDestinations(data);
+                if (data.length > 0) setSelectedDest(data[0].id);
+            }
+        };
+
         fetchDefaults();
+        fetchDestinations();
+
+        // Enumerate devices
+        const getDevices = async () => {
+            try {
+                // Request temporary access to get labels
+                const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                const videos = devices.filter(d => d.kind === 'videoinput');
+                const audios = devices.filter(d => d.kind === 'audioinput');
+
+                setVideoDevices(videos);
+                setAudioDevices(audios);
+
+                if (videos.length > 0) setSelectedCamera(videos[0].deviceId);
+                if (audios.length > 0) setSelectedMic(audios[0].deviceId);
+
+                // Stop temp stream
+                tempStream.getTracks().forEach(t => t.stop());
+            } catch (err) {
+                console.error("Error enumerating devices:", err);
+            }
+        };
+        getDevices();
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
+    // Handle Stream Lifecycle
+    useEffect(() => {
+        const startStream = async () => {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+            }
+
+            try {
+                const constraints = {
+                    video: camEnabled ? { deviceId: selectedCamera ? { exact: selectedCamera } : undefined } : false,
+                    audio: micEnabled ? { deviceId: selectedMic ? { exact: selectedMic } : undefined } : false
+                };
+
+                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+                setStream(newStream);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = newStream;
+                }
+
+                // Audio Analysis for VU Meters
+                if (micEnabled) {
+                    if (!audioContextRef.current) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    }
+                    const ctx = audioContextRef.current;
+                    const source = ctx.createMediaStreamSource(newStream);
+                    const analyser = ctx.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    analyserRef.current = analyser;
+
+                    const updateVU = () => {
+                        if (!analyserRef.current) return;
+                        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                        analyser.getByteFrequencyData(dataArray);
+                        const average = dataArray.reduce((p, c) => p + c, 0) / dataArray.length;
+
+                        setVuLevels(prev => ({
+                            ...prev,
+                            mic: (average / 128) * 100,
+                            system: isLive ? Math.random() * 10 + 50 : 0,
+                            music: isLive ? Math.random() * 10 + 30 : 0
+                        }));
+                        animationFrameRef.current = requestAnimationFrame(updateVU);
+                    };
+                    updateVU();
+                } else {
+                    setVuLevels(prev => ({ ...prev, mic: 0 }));
+                }
+            } catch (err) {
+                console.error("Error starting stream:", err);
+            }
+        };
+
+        startStream();
+
+        return () => {
+            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [camEnabled, micEnabled, selectedCamera, selectedMic, isLive]);
+
+    useEffect(() => {
+        const dest = destinations.find(d => d.id === selectedDest);
+        const url = dest ? `${dest.url}/${dest.stream_key}` : 'rtmp://your-stream-url/key';
+        const br = streamingDefaults.bitrate.replace(/\D/g, '');
+        const preset = streamingDefaults.quality.includes('4K') ? 'slow' : 'veryfast';
+        const codec = streamingDefaults.quality.includes('HEVC') || streamingDefaults.quality.includes('4K') ? 'libx265' : 'libx264';
+
+        const cmd = `ffmpeg -f avfoundation -i "1:0" \\\n  -vcodec ${codec} -preset ${preset} -b:v ${br}k -maxrate ${br}k -bufsize ${parseInt(br) * 2}k \\\n  -acodec aac -b:a 160k -ar 44100 \\\n  -f flv "${url}"`;
+
+        setFfmpegCommand(cmd);
+    }, [selectedDest, destinations, streamingDefaults]);
+
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | undefined;
-        let vuInterval: ReturnType<typeof setInterval> | undefined;
 
         if (isLive) {
             interval = setInterval(() => {
                 setUptime(prev => prev + 1);
             }, 1000);
-
-            vuInterval = setInterval(() => {
-                setVuLevels({
-                    mic: micEnabled ? Math.random() * 80 + 10 : 0,
-                    system: Math.random() * 60 + 5,
-                    music: Math.random() * 40 + 10
-                });
-            }, 100);
-        } else {
-            setVuLevels({ mic: 0, system: 0, music: 0 });
         }
         return () => {
             if (interval) clearInterval(interval);
-            if (vuInterval) clearInterval(vuInterval);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLive, micEnabled]);
+    }, [isLive]);
 
     const formatUptime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
@@ -190,17 +304,16 @@ const GoLive: React.FC = () => {
                 {/* Main Feed Column */}
                 <div className="xl:col-span-3 space-y-6">
 
-                    {/* Video Player Mockup */}
+                    {/* Video Player Preview */}
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-2xl group">
                         {camEnabled ? (
-                            <>
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 animate-pulse-glow opacity-50"></div>
-                                <img
-                                    src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                                    alt="Stream Preview"
-                                    className="w-full h-full object-cover opacity-80"
-                                />
-                            </>
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full h-full object-cover scale-x-[-1]" // Flip for mirror effect
+                            />
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted">
                                 <VidIcon size={64} className="mb-4 opacity-50" />
@@ -331,6 +444,41 @@ const GoLive: React.FC = () => {
 
                 {/* Sidebar Column: Chat & Events */}
                 <div className="xl:col-span-1 space-y-6 flex flex-col">
+                    {/* Hardware Selection */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-xs font-bold flex items-center gap-2 text-secondary uppercase tracking-widest">
+                                <Monitor size={14} /> Hardware Setup
+                            </CardTitle>
+                        </CardHeader>
+                        <CardBody className="py-3 space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-muted font-bold uppercase tracking-wider">Camera</label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-secondary/50 transition-colors"
+                                    value={selectedCamera}
+                                    onChange={(e) => setSelectedCamera(e.target.value)}
+                                >
+                                    {videoDevices.map(d => (
+                                        <option key={d.deviceId} value={d.deviceId} className="bg-[#1a1d24]">{d.label || 'Default Camera'}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-muted font-bold uppercase tracking-wider">Microphone</label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-secondary/50 transition-colors"
+                                    value={selectedMic}
+                                    onChange={(e) => setSelectedMic(e.target.value)}
+                                >
+                                    {audioDevices.map(d => (
+                                        <option key={d.deviceId} value={d.deviceId} className="bg-[#1a1d24]">{d.label || 'Default Mic'}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </CardBody>
+                    </Card>
+
                     {/* Scene Selector */}
                     <Card>
                         <CardHeader>
@@ -426,6 +574,54 @@ const GoLive: React.FC = () => {
                                 </div>
                                 <Info size={12} className="text-muted/50" />
                             </div>
+                        </CardBody>
+                    </Card>
+
+                    {/* FFmpeg Command Generator */}
+                    <Card className="border-primary/20">
+                        <CardHeader className="py-3 flex-between">
+                            <CardTitle className="text-xs font-bold flex items-center gap-2 text-primary uppercase tracking-widest">
+                                <Terminal size={14} /> FFmpeg Command
+                            </CardTitle>
+                            <Button
+                                variant="secondary"
+                                className="h-6 px-2 text-[10px]"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(ffmpegCommand);
+                                    window.dispatchEvent(new CustomEvent('show-toast', {
+                                        detail: { message: 'Command copied to clipboard!', type: 'success' }
+                                    }));
+                                }}
+                                icon={<Copy size={10} />}
+                            >
+                                COPY
+                            </Button>
+                        </CardHeader>
+                        <CardBody className="py-3 space-y-3">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-muted font-bold uppercase tracking-wider">Target Destination</label>
+                                <select
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors"
+                                    value={selectedDest}
+                                    onChange={(e) => setSelectedDest(e.target.value)}
+                                >
+                                    {destinations.length > 0 ? (
+                                        destinations.map(d => (
+                                            <option key={d.id} value={d.id} className="bg-[#1a1d24]">{d.name}</option>
+                                        ))
+                                    ) : (
+                                        <option value="" className="bg-[#1a1d24]">No active destinations</option>
+                                    )}
+                                </select>
+                            </div>
+                            <div className="relative group">
+                                <pre className="bg-black/40 p-3 rounded-lg text-[10px] font-mono text-primary/80 border border-white/5 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[120px]">
+                                    {ffmpegCommand}
+                                </pre>
+                            </div>
+                            <p className="text-[9px] text-muted italic">
+                                * Use this command in your terminal for optimized low-latency streaming based on current profile.
+                            </p>
                         </CardBody>
                     </Card>
 

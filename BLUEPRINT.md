@@ -58,3 +58,19 @@ Defined in `src/index.css`:
 - **Max Resolution**: 4K (HEVC)
 - **Max Bitrate**: 20 Mbps
 - **Keyframe Interval**: 2 seconds (Recommended)
+
+## 8. FFmpeg Integration
+### 8.1 Standard RTMP/RTMPS Command
+StreamPulse generates optimized commands for external encoders:
+```bash
+ffmpeg -f avfoundation -i "1:0" \
+  -vcodec libx264 -preset veryfast -b:v 6000k -maxrate 6000k -bufsize 12000k \
+  -acodec aac -b:a 160k -ar 44100 \
+  -f flv "rtmp://[url]/[key]"
+```
+
+### 8.2 Encoding Parameters
+- **Video Encoder**: `libx264` (default) or `libx265` for HEVC.
+- **Rate Control**: CBR (Constant Bitrate) with buffer size twice the bitrate.
+- **Audio Encoder**: `aac` at 128-160kbps.
+- **Pixel Format**: `yuv420p`.

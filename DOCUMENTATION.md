@@ -50,5 +50,24 @@ The platform supports **AVC/H.264** for standard compatibility and **HEVC/H.265*
 ### Audio
 Standard **AAC-LC** is preferred for high-fidelity audio, with legacy support for **MP3**.
 
-## 7. Deployment
+## 7. FFmpeg Optimization Guide
+For the best results with StreamPulse, use the following FFmpeg flags:
+
+### 1080p 60fps (Recommended)
+```bash
+-vcodec libx264 -preset veryfast -b:v 6000k -maxrate 6000k -bufsize 12000k -g 120
+```
+
+### 4K 60fps (HEVC)
+```bash
+-vcodec libx265 -preset vertical -b:v 15000k -maxrate 15000k -bufsize 30000k -g 120
+```
+
+## 8. Deployment
 The project is optimized for deployment on platforms like Vercel or Netlify via Vite's build output.
+
+## 9. Local Hardware Access
+The Live Control Room utilizes WebRTC (`navigator.mediaDevices`) for low-latency previews.
+- **Permissions**: Users must grant Camera and Microphone access.
+- **Security**: Hardware access requires a Secure Context (HTTPS or localhost).
+- **Enumeration**: Devices are enumerated on component mount; labels may be unavailable until initial permission is granted.
