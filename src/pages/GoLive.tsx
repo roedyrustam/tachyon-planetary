@@ -84,6 +84,13 @@ const GoLive: React.FC = () => {
         };
     }, [isLive, micEnabled]);
 
+    const formatUptime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     const saveRecording = async () => {
         if (!user || uptime < 5) return;
 
@@ -136,13 +143,6 @@ const GoLive: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const formatUptime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
     return (
@@ -404,7 +404,6 @@ const GoLive: React.FC = () => {
 
                     <UnifiedChat isLive={isLive} />
                 </div>
-
             </div>
         </div>
     );
