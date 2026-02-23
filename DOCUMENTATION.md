@@ -71,3 +71,28 @@ The Live Control Room utilizes WebRTC (`navigator.mediaDevices`) for low-latency
 - **Permissions**: Users must grant Camera and Microphone access.
 - **Security**: Hardware access requires a Secure Context (HTTPS or localhost).
 - **Enumeration**: Devices are enumerated on component mount; labels may be unavailable until initial permission is granted.
+
+## 10. Adaptive HLS Transcoding
+To produce a multi-bitrate HLS stream from a single source, use the following template:
+
+### Multi-Variant FFmpeg Example
+```bash
+ffmpeg -i rtmp://localhost/live/stream -filter_complex \
+  "[0:v]split=3[v1][v2][v3]; \
+  [v1]scale=w=1920:h=1080[v1out]; \
+  [v2]scale=w=1280:h=720[v2out]; \
+  [v3]scale=w=854:h=480[v3out]" \
+  -map "[v1out]" -c:v:0 libx264 -b:v:0 6000k \
+  -map "[v2out]" -c:v:1 libx264 -b:v:1 3500k \
+  -map "[v3out]" -c:v:2 libx264 -b:v:2 1500k \
+  -map a:0 -c:a aac -b:a 128k \
+  -f hls -hls_time 4 -hls_playlist_type event \
+  -master_pl_name index.m3u8 \
+  -var_stream_map "v:0,a:0 v:1,a:0 v:2,a:0" \
+  "stream_%v.m3u8"
+```
+
+### Key Parameters
+- `-filter_complex`: Splits the input and scales to multiple resolutions.
+- `-var_stream_map`: Links specific video variants to their shared audio track.
+- `-master_pl_name`: Generates the top-level manifest for adaptive players.

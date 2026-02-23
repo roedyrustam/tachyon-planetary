@@ -74,3 +74,17 @@ ffmpeg -f avfoundation -i "1:0" \
 - **Rate Control**: CBR (Constant Bitrate) with buffer size twice the bitrate.
 - **Audio Encoder**: `aac` at 128-160kbps.
 - **Pixel Format**: `yuv420p`.
+
+## 9. Adaptive Bitrate (ABR) Architecture
+StreamPulse supports multi-bitrate HLS output for optimized delivery.
+
+### 9.1 Multi-Variant Ladder
+- **1080p (High)**: 6000 Kbps
+- **720p (Medium)**: 3500 Kbps
+- **480p (Low)**: 1500 Kbps
+
+### 9.2 HLS Muxer Configuration
+The FFmpeg command utilizes `-filter_complex` for scaling and the `hls` muxer to generate:
+1. **Variant Playlists**: Individual `.m3u8` files for each resolution.
+2. **Master Playlist**: `index.m3u8` which references all variants with appropriate `BANDWIDTH` and `RESOLUTION` tags.
+3. **Segment Storage**: TS segments with a fixed duration (4 seconds recommended).

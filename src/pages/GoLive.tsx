@@ -39,6 +39,7 @@ const GoLive: React.FC = () => {
     const [destinations, setDestinations] = useState<{ id: string; name: string; url: string; stream_key: string }[]>([]);
     const [selectedDest, setSelectedDest] = useState<string>('');
     const [ffmpegCommand, setFfmpegCommand] = useState('');
+    const [streamMode, setStreamMode] = useState<'standard' | 'adaptive'>('standard');
 
     // WebRTC & Hardware State
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -177,14 +178,22 @@ const GoLive: React.FC = () => {
     useEffect(() => {
         const dest = destinations.find(d => d.id === selectedDest);
         const url = dest ? `${dest.url}/${dest.stream_key}` : 'rtmp://your-stream-url/key';
-        const br = streamingDefaults.bitrate.replace(/\D/g, '');
+        const br = parseInt(streamingDefaults.bitrate.replace(/\D/g, ''));
         const preset = streamingDefaults.quality.includes('4K') ? 'slow' : 'veryfast';
         const codec = streamingDefaults.quality.includes('HEVC') || streamingDefaults.quality.includes('4K') ? 'libx265' : 'libx264';
 
-        const cmd = `ffmpeg -f avfoundation -i "1:0" \\\n  -vcodec ${codec} -preset ${preset} -b:v ${br}k -maxrate ${br}k -bufsize ${parseInt(br) * 2}k \\\n  -acodec aac -b:a 160k -ar 44100 \\\n  -f flv "${url}"`;
+        if (streamMode === 'standard') {
+            const cmd = `ffmpeg -f avfoundation -i "1:0" \\\n  -vcodec ${codec} -preset ${preset} -b:v ${br}k -maxrate ${br}k -bufsize ${br * 2}k \\\n  -acodec aac -b:a 160k -ar 44100 \\\n  -f flv "${url}"`;
+            setFfmpegCommand(cmd);
+        } else {
+            // Adaptive HLS Command
+            const br720 = Math.round(br * 0.6);
+            const br480 = Math.round(br * 0.25);
 
-        setFfmpegCommand(cmd);
-    }, [selectedDest, destinations, streamingDefaults]);
+            const cmd = `ffmpeg -f avfoundation -i "1:0" -filter_complex \\\n  "[0:v]split=3[v1][v2][v3]; \\\n  [v1]copy[v1out]; \\\n  [v2]scale=w=1280:h=720[v2out]; \\\n  [v3]scale=w=854:h=480[v3out]" \\\n  -map "[v1out]" -c:v:0 ${codec} -b:v:0 ${br}k \\\n  -map "[v2out]" -c:v:1 ${codec} -b:v:1 ${br720}k \\\n  -map "[v3out]" -c:v:2 ${codec} -b:v:2 ${br480}k \\\n  -map a:0 -c:a aac -b:a 128k \\\n  -f hls -hls_time 4 -hls_playlist_type event \\\n  -master_pl_name index.m3u8 \\\n  -var_stream_map "v:0,a:0 v:1,a:0 v:2,a:0" \\\n  "stream_%v.m3u8"`;
+            setFfmpegCommand(cmd);
+        }
+    }, [selectedDest, destinations, streamingDefaults, streamMode]);
 
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | undefined;
@@ -613,6 +622,23 @@ const GoLive: React.FC = () => {
                                         <option value="" className="bg-[#1a1d24]">No active destinations</option>
                                     )}
                                 </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] text-muted font-bold uppercase tracking-wider">Stream Mode</label>
+                                <div className="flex gap-2 p-1 bg-white/5 rounded-lg border border-white/10">
+                                    <button
+                                        onClick={() => setStreamMode('standard')}
+                                        className={`flex-1 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${streamMode === 'standard' ? 'bg-primary text-white shadow-lg' : 'text-muted hover:text-white'}`}
+                                    >
+                                        RTMP
+                                    </button>
+                                    <button
+                                        onClick={() => setStreamMode('adaptive')}
+                                        className={`flex-1 py-1 rounded-md text-[10px] font-bold uppercase transition-all ${streamMode === 'adaptive' ? 'bg-secondary text-white shadow-lg' : 'text-muted hover:text-white'}`}
+                                    >
+                                        ABR HLS
+                                    </button>
+                                </div>
                             </div>
                             <div className="relative group">
                                 <pre className="bg-black/40 p-3 rounded-lg text-[10px] font-mono text-primary/80 border border-white/5 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[120px]">
