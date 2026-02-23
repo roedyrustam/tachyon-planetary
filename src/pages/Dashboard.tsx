@@ -7,17 +7,45 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
-const data = [
-    { name: '10:00', viewers: 1200 },
-    { name: '10:10', viewers: 1800 },
-    { name: '10:20', viewers: 1600 },
-    { name: '10:30', viewers: 2400 },
-    { name: '10:40', viewers: 2800 },
-    { name: '10:50', viewers: 3600 },
-    { name: '11:00', viewers: 4200 },
-];
+const viewershipData: Record<string, any[]> = {
+    '1h': [
+        { name: '10:00', viewers: 1200 },
+        { name: '10:10', viewers: 1800 },
+        { name: '10:20', viewers: 1600 },
+        { name: '10:30', viewers: 2400 },
+        { name: '10:40', viewers: 2800 },
+        { name: '10:50', viewers: 3600 },
+        { name: '11:00', viewers: 4200 },
+    ],
+    '24h': [
+        { name: '00:00', viewers: 800 },
+        { name: '04:00', viewers: 1200 },
+        { name: '08:00', viewers: 2500 },
+        { name: '12:00', viewers: 4200 },
+        { name: '16:00', viewers: 3800 },
+        { name: '20:00', viewers: 5100 },
+        { name: '23:59', viewers: 4200 },
+    ],
+    '7d': [
+        { name: 'Mon', viewers: 3200 },
+        { name: 'Tue', viewers: 4500 },
+        { name: 'Wed', viewers: 4200 },
+        { name: 'Thu', viewers: 5800 },
+        { name: 'Fri', viewers: 7200 },
+        { name: 'Sat', viewers: 8500 },
+        { name: 'Sun', viewers: 4200 },
+    ]
+};
 
 const Dashboard: React.FC = () => {
+    const [timeRange, setTimeRange] = React.useState('1h');
+    const [chartData, setChartData] = React.useState(viewershipData['1h']);
+
+    const handleRangeChange = (range: string) => {
+        setTimeRange(range);
+        setChartData(viewershipData[range] || viewershipData['1h']);
+    };
+
     return (
         <div className="animate-fade-in">
             <div className="flex-between page-header">
@@ -58,14 +86,27 @@ const Dashboard: React.FC = () => {
                 {/* Chart Column */}
                 <div className="lg:col-span-2 space-y-6">
                     <Card>
-                        <CardHeader className="flex-between">
+                        <CardHeader className="flex-between flex-wrap gap-4">
                             <CardTitle>Viewership Overview</CardTitle>
-                            <Badge variant="success">Live</Badge>
+                            <div className="flex items-center bg-white/5 rounded-lg p-1 border border-white/5">
+                                {['1h', '24h', '7d'].map((range) => (
+                                    <button
+                                        key={range}
+                                        onClick={() => handleRangeChange(range)}
+                                        className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${timeRange === range
+                                                ? 'bg-primary text-white shadow-lg'
+                                                : 'text-muted hover:text-white hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {range}
+                                    </button>
+                                ))}
+                            </div>
                         </CardHeader>
                         <CardBody>
                             <div className="h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorViewers" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -79,7 +120,16 @@ const Dashboard: React.FC = () => {
                                             contentStyle={{ backgroundColor: 'var(--bg-card)', border: 'var(--glass-border)', borderRadius: '8px' }}
                                             itemStyle={{ color: 'var(--text-main)' }}
                                         />
-                                        <Area type="monotone" dataKey="viewers" stroke="var(--primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorViewers)" />
+                                        <Area
+                                            key={timeRange}
+                                            type="monotone"
+                                            dataKey="viewers"
+                                            stroke="var(--primary)"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorViewers)"
+                                            animationDuration={1000}
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>

@@ -1,17 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardBody, CardHeader, CardTitle, } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Calendar as CalendarIcon, Clock, Users, Plus, Edit2, Trash2 } from 'lucide-react';
+import AddScheduleModal from '../components/ui/AddScheduleModal';
 
-const mockSchedules = [
+interface Schedule {
+    id: number;
+    title: string;
+    date: string;
+    time: string;
+    duration: string;
+    expectedViewers: string;
+    status: 'upcoming' | 'draft' | 'past';
+    platforms: string[];
+}
+
+const initialSchedules: Schedule[] = [
     { id: 1, title: 'Weekly Q&A - Web Development', date: '2026-10-25', time: '14:00', duration: '1h 30m', expectedViewers: '5k+', status: 'upcoming', platforms: ['YouTube', 'Twitch'] },
     { id: 2, title: 'Live Coding: Building a React App', date: '2026-10-26', time: '20:00', duration: '2h 00m', expectedViewers: '3k+', status: 'draft', platforms: ['YouTube'] },
     { id: 3, title: 'Interview with Tech Lead', date: '2026-10-28', time: '18:00', duration: '1h 00m', expectedViewers: '10k+', status: 'upcoming', platforms: ['YouTube', 'Facebook', 'Twitch'] },
     { id: 4, title: 'Product Launch Showcase', date: '2026-11-01', time: '10:00', duration: '45m', expectedViewers: '25k+', status: 'upcoming', platforms: ['Custom RTMP', 'YouTube'] },
 ];
 
-const Schedule: React.FC = () => {
+const SchedulePage: React.FC = () => {
+    const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleAddSchedule = (newSchedule: Omit<Schedule, 'id' | 'status'>) => {
+        setSchedules([
+            ...schedules,
+            {
+                ...newSchedule,
+                id: Date.now(),
+                status: 'upcoming'
+            }
+        ]);
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm('Are you sure you want to cancel this scheduled broadcast?')) {
+            setSchedules(schedules.filter(s => s.id !== id));
+        }
+    };
+
     return (
         <div className="animate-fade-in">
             <div className="flex-between flex-wrap gap-4 page-header mb-8">
@@ -19,7 +51,7 @@ const Schedule: React.FC = () => {
                     <h1 className="page-title">Broadcast Schedule</h1>
                     <p className="page-subtitle">Plan and organize your upcoming streams</p>
                 </div>
-                <Button icon={<Plus size={18} />}>Schedule Stream</Button>
+                <Button icon={<Plus size={18} />} onClick={() => setIsModalOpen(true)}>Schedule Stream</Button>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -44,16 +76,16 @@ const Schedule: React.FC = () => {
                                 {Array.from({ length: 31 }).map((_, i) => {
                                     const date = i + 1;
                                     const isToday = date === 24;
-                                    const hasEvent = [25, 26, 28].includes(date);
+                                    const hasEvent = schedules.some(s => new Date(s.date).getDate() === date);
 
                                     return (
                                         <div
                                             key={i}
                                             className={`
-                         aspect-square flex items-center justify-center rounded-full cursor-pointer transition-colors
-                         ${isToday ? 'bg-primary text-white font-bold' : ''}
-                         ${!isToday && hasEvent ? 'bg-primary/20 text-primary font-medium' : 'hover:bg-white/10'}
-                       `}
+                                                aspect-square flex items-center justify-center rounded-full cursor-pointer transition-colors
+                                                ${isToday ? 'bg-primary text-white font-bold' : ''}
+                                                ${!isToday && hasEvent ? 'bg-primary/20 text-primary font-medium' : 'hover:bg-white/10'}
+                                            `}
                                         >
                                             {date}
                                         </div>
@@ -69,11 +101,11 @@ const Schedule: React.FC = () => {
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                                     <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" defaultChecked />
-                                    Upcoming (3)
+                                    Upcoming ({schedules.filter(s => s.status === 'upcoming').length})
                                 </label>
                                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                                     <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" defaultChecked />
-                                    Drafts (1)
+                                    Drafts ({schedules.filter(s => s.status === 'draft').length})
                                 </label>
                                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                                     <input type="checkbox" className="rounded bg-transparent border-white/20 text-primary focus:ring-primary h-4 w-4" />
@@ -88,13 +120,15 @@ const Schedule: React.FC = () => {
                 <div className="xl:col-span-3 space-y-4">
                     <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
 
-                    {mockSchedules.map((schedule) => (
+                    {schedules.map((schedule) => (
                         <Card key={schedule.id} className="border-l-4 border-l-primary hover:border-l-secondary transition-colors" hoverable>
                             <CardBody className="p-5 flex flex-col md:flex-row gap-4 md:items-center justify-between">
 
                                 <div className="flex gap-5">
                                     <div className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-xl min-w-[70px]">
-                                        <span className="text-xs text-muted uppercase font-semibold">{new Date(schedule.date).toLocaleDateString('en-US', { month: 'short' })}</span>
+                                        <span className="text-xs text-muted uppercase font-semibold">
+                                            {new Date(schedule.date).toLocaleDateString('en-US', { month: 'short' })}
+                                        </span>
                                         <span className="text-2xl font-bold">{new Date(schedule.date).getDate()}</span>
                                     </div>
 
@@ -110,7 +144,7 @@ const Schedule: React.FC = () => {
 
                                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted mt-2">
                                             <span className="flex items-center gap-1.5"><Clock size={14} /> {schedule.time} ({schedule.duration})</span>
-                                            <span className="flex items-center gap-1.5"><Users size={14} /> Est. ~{schedule.expectedViewers}</span>
+                                            <span className="flex items-center gap-1.5"><Users size={14} /> {schedule.expectedViewers}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -126,7 +160,14 @@ const Schedule: React.FC = () => {
 
                                     <div className="flex items-center gap-2 border-l border-white/10 pl-4">
                                         <Button variant="secondary" iconOnly icon={<Edit2 size={16} />} title="Edit Event" />
-                                        <Button variant="danger" className="text-muted hover:text-white" iconOnly icon={<Trash2 size={16} />} title="Cancel Event" />
+                                        <Button
+                                            variant="danger"
+                                            className="text-muted hover:text-white"
+                                            iconOnly
+                                            icon={<Trash2 size={16} />}
+                                            title="Cancel Event"
+                                            onClick={() => handleDelete(schedule.id)}
+                                        />
                                     </div>
                                 </div>
 
@@ -134,10 +175,24 @@ const Schedule: React.FC = () => {
                         </Card>
                     ))}
 
+                    {schedules.length === 0 && (
+                        <div className="text-center py-20 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                            <CalendarIcon size={48} className="mx-auto text-muted mb-4 opacity-20" />
+                            <p className="text-muted">No scheduled broadcasts found.</p>
+                            <Button variant="secondary" className="mt-4" onClick={() => setIsModalOpen(true)}>Schedule your first stream</Button>
+                        </div>
+                    )}
+
                 </div>
             </div>
+
+            <AddScheduleModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onAdd={handleAddSchedule}
+            />
         </div>
     );
 };
 
-export default Schedule;
+export default SchedulePage;

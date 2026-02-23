@@ -15,6 +15,25 @@ const mockVideos = [
 ];
 
 const Videos: React.FC = () => {
+    const [videos, setVideos] = React.useState(mockVideos);
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [lastSharedId, setLastSharedId] = React.useState<number | null>(null);
+
+    const handleDelete = (id: number) => {
+        if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+            setVideos(videos.filter(v => v.id !== id));
+        }
+    };
+
+    const handleShare = (id: number) => {
+        setLastSharedId(id);
+        setTimeout(() => setLastSharedId(null), 2000);
+    };
+
+    const filteredVideos = videos.filter(v =>
+        v.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="animate-fade-in">
             <div className="flex-between flex-wrap gap-4 page-header mb-8">
@@ -32,6 +51,8 @@ const Videos: React.FC = () => {
                     <Input
                         placeholder="Search videos..."
                         icon={<Search size={18} />}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
                 <div className="flex gap-2">
@@ -45,7 +66,7 @@ const Videos: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {mockVideos.map(video => (
+                {filteredVideos.map(video => (
                     <Card key={video.id} className="group overflow-hidden rounded-xl border border-[var(--border-light)] bg-[#1a1d24]">
                         <div className="relative aspect-video overflow-hidden">
                             <img
@@ -57,6 +78,9 @@ const Videos: React.FC = () => {
                                 <Badge variant="info" className="self-end mb-auto bg-black/50 backdrop-blur-md border-white/10 font-mono">
                                     {video.duration}
                                 </Badge>
+                                {lastSharedId === video.id && (
+                                    <Badge variant="success" className="absolute top-4 left-4 animate-bounce">Link Copied!</Badge>
+                                )}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
                                     <Button iconOnly className="rounded-full w-12 h-12" icon={<Play size={24} fill="currentColor" />} />
                                 </div>
@@ -73,13 +97,42 @@ const Videos: React.FC = () => {
                             <div className="flex-between mt-4 pt-4 border-t border-[var(--border-light)] text-sm">
                                 <span className="text-[var(--text-muted)] font-mono text-xs">{video.size}</span>
                                 <div className="flex gap-1">
-                                    <Button variant="secondary" className="p-1.5 h-auto text-[var(--text-muted)] hover:text-white border-none bg-transparent hover:bg-white/5" iconOnly icon={<Download size={16} />} title="Download" />
-                                    <Button variant="danger" className="p-1.5 h-auto border-none bg-transparent hover:bg-red-500/10" iconOnly icon={<Trash2 size={16} />} title="Delete" />
+                                    <Button
+                                        variant="secondary"
+                                        className="p-1.5 h-auto text-[var(--text-muted)] hover:text-white border-none bg-transparent hover:bg-white/5"
+                                        iconOnly
+                                        icon={<Download size={16} />}
+                                        title="Download"
+                                    />
+                                    <Button
+                                        variant="secondary"
+                                        className="p-1.5 h-auto text-[var(--text-muted)] hover:text-white border-none bg-transparent hover:bg-white/5"
+                                        iconOnly
+                                        icon={<Search size={16} />}
+                                        title="Share"
+                                        onClick={() => handleShare(video.id)}
+                                    />
+                                    <Button
+                                        variant="danger"
+                                        className="p-1.5 h-auto border-none bg-transparent hover:bg-red-500/10"
+                                        iconOnly
+                                        icon={<Trash2 size={16} />}
+                                        title="Delete"
+                                        onClick={() => handleDelete(video.id)}
+                                    />
                                 </div>
                             </div>
                         </CardBody>
                     </Card>
                 ))}
+
+                {filteredVideos.length === 0 && (
+                    <div className="col-span-full text-center py-20 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                        <Search size={48} className="mx-auto text-muted mb-4 opacity-20" />
+                        <p className="text-muted">No videos match your search.</p>
+                        <Button variant="secondary" className="mt-4" onClick={() => setSearchQuery('')}>Clear Search</Button>
+                    </div>
+                )}
             </div>
         </div>
     );
