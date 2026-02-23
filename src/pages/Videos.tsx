@@ -3,8 +3,9 @@ import { Card, CardBody } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
-import { Play, Download, Trash2, Search, Filter, UploadCloud, Link2, HardDrive } from 'lucide-react';
+import { Play, Download, Trash2, Search, Filter, UploadCloud, Link2, HardDrive, X, Calendar, Eye, Share2 } from 'lucide-react';
 import AddVideoModal from '../components/ui/AddVideoModal';
+import HLSPlayer from '../components/ui/HLSPlayer';
 
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,7 @@ interface Video {
     views: string;
     size: string;
     date: string;
+    url?: string;
     created_at?: string;
 }
 
@@ -26,6 +28,7 @@ const Videos: React.FC = () => {
     const [searchQuery, setSearchQuery] = React.useState('');
     const [lastSharedId, setLastSharedId] = React.useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [playingVideo, setPlayingVideo] = React.useState<Video | null>(null);
     const { user } = useAuth();
 
     const fetchVideos = async () => {
@@ -85,6 +88,7 @@ const Videos: React.FC = () => {
                 user_id: user.id,
                 title: videoData.title,
                 duration: videoData.duration,
+                url: videoData.url,
                 thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
                 views: "0",
                 size: "Cloud",
@@ -160,7 +164,12 @@ const Videos: React.FC = () => {
                                 </div>
                             </div>
                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
-                                <Button iconOnly className="rounded-full w-12 h-12" icon={<Play size={24} fill="currentColor" />} />
+                                <Button
+                                    iconOnly
+                                    className="rounded-full w-12 h-12"
+                                    icon={<Play size={24} fill="currentColor" />}
+                                    onClick={() => setPlayingVideo(video)}
+                                />
                             </div>
                         </div>
                         <CardBody className="p-4 bg-[#111318]">
@@ -210,6 +219,59 @@ const Videos: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onAdd={handleAddCloudVideo}
             />
+
+            {/* Video Playback & Details Modal */}
+            {playingVideo && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setPlayingVideo(null)} />
+
+                    <div className="relative w-full max-w-4xl bg-[#0d1017] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+                        <div className="flex-between p-4 border-b border-white/5">
+                            <h2 className="text-lg font-bold truncate pr-8">{playingVideo.title}</h2>
+                            <button onClick={() => setPlayingVideo(null)} className="text-muted hover:text-white transition-colors bg-transparent border-none cursor-pointer">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-2 sm:p-6 space-y-6">
+                            {playingVideo.url ? (
+                                <HLSPlayer
+                                    url={playingVideo.url}
+                                    autoPlay={true}
+                                    poster={playingVideo.thumbnail}
+                                />
+                            ) : (
+                                <div className="aspect-video bg-black/40 rounded-xl flex-center flex-col text-muted border border-white/5 border-dashed">
+                                    <Play size={48} className="mb-4 opacity-20" />
+                                    <p>Local playback not available in this view.</p>
+                                    <p className="text-xs">Only cloud-sourced videos can be previewed.</p>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="md:col-span-2 space-y-4">
+                                    <div className="flex flex-wrap gap-4">
+                                        <Badge variant="info" className="bg-primary/20 text-primary border-primary/20 px-3 py-1 flex items-center gap-1.5">
+                                            <Calendar size={12} /> Played on {playingVideo.date}
+                                        </Badge>
+                                        <Badge variant="info" className="bg-secondary/20 text-secondary border-secondary/20 px-3 py-1 flex items-center gap-1.5">
+                                            <Eye size={12} /> {playingVideo.views} Views
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-muted leading-relaxed">
+                                        This broadcast was recorded and saved to your cloud library.
+                                        {playingVideo.size === 'Cloud' ? ' It is hosted on Google Drive and streamed via low-latency HLS.' : ' This is a local recording available for download.'}
+                                    </p>
+                                </div>
+                                <div className="space-y-3">
+                                    <Button variant="primary" className="w-full" icon={<Download size={18} />}>Download Master</Button>
+                                    <Button variant="secondary" className="w-full" icon={<Share2 size={18} />} onClick={() => handleShare(playingVideo.id)}>Share Link</Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
