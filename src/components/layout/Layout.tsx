@@ -10,8 +10,9 @@ const Layout: React.FC = () => {
     const [toasts, setToasts] = useState<{ id: string; message: string; type: ToastType }[]>([]);
 
     useEffect(() => {
-        const handleToast = (e: any) => {
-            const { message, type } = e.detail;
+        const handleToast = (e: Event) => {
+            const customEvent = e as CustomEvent<{ message: string; type: ToastType }>;
+            const { message, type } = customEvent.detail;
             const id = Math.random().toString(36).substr(2, 9);
             setToasts(prev => [...prev, { id, message, type }]);
         };

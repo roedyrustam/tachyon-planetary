@@ -29,11 +29,6 @@ const Destinations: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (!user) return;
-        fetchDestinations();
-    }, [user]);
-
     const fetchDestinations = async () => {
         const { data, error } = await supabase
             .from('destinations')
@@ -44,6 +39,11 @@ const Destinations: React.FC = () => {
         else setDestinations(data || []);
         setLoading(false);
     };
+
+    useEffect(() => {
+        if (!user) return;
+        fetchDestinations();
+    }, [user]);
 
     const toggleActive = async (id: string, currentStatus: boolean) => {
         const { error } = await supabase

@@ -14,17 +14,17 @@ interface ToastProps {
 const Toast: React.FC<ToastProps> = ({ message, type = 'success', duration = 3000, onClose }) => {
     const [isExiting, setIsExiting] = useState(false);
 
+    const handleClose = () => {
+        setIsExiting(true);
+        setTimeout(onClose, 300); // Match animation duration
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             handleClose();
         }, duration);
         return () => clearTimeout(timer);
     }, [duration]);
-
-    const handleClose = () => {
-        setIsExiting(true);
-        setTimeout(onClose, 300); // Match animation duration
-    };
 
     const icons = {
         success: <CheckCircle size={18} className="text-secondary" />,

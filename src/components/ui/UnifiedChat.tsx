@@ -28,12 +28,33 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
     const { user } = useAuth();
     const chatEndRef = useRef<HTMLDivElement>(null);
 
+    const scrollToBottom = () => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    const scrollToBottom = () => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const fetchMessages = async () => {
+        const { data, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (data && !error) {
+            const formatted = data.reverse().map((msg: any) => ({
+                id: msg.id,
+                user: msg.display_name,
+                text: msg.text,
+                platform: msg.platform,
+                time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                isSuperChat: msg.is_super_chat,
+                amount: msg.amount
+            }));
+            setMessages(formatted);
+        }
     };
 
     useEffect(() => {
@@ -64,28 +85,8 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
         return () => {
             supabase.removeChannel(channel);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    const fetchMessages = async () => {
-        const { data, error } = await supabase
-            .from('chat_messages')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(20);
-
-        if (data && !error) {
-            const formatted = data.reverse().map((msg: any) => ({
-                id: msg.id,
-                user: msg.display_name,
-                text: msg.text,
-                platform: msg.platform,
-                time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                isSuperChat: msg.is_super_chat,
-                amount: msg.amount
-            }));
-            setMessages(formatted);
-        }
-    };
 
     const deleteMessage = async (id: string) => {
         if (!user) return;

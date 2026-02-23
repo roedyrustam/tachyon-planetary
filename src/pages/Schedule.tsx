@@ -22,11 +22,6 @@ const SchedulePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (!user) return;
-        fetchSchedules();
-    }, [user]);
-
     const fetchSchedules = async () => {
         const { data, error } = await supabase
             .from('schedules')
@@ -38,6 +33,11 @@ const SchedulePage: React.FC = () => {
         else setSchedules(data || []);
         setLoading(false);
     };
+
+    useEffect(() => {
+        if (!user) return;
+        fetchSchedules();
+    }, [user]);
 
     const handleAddSchedule = async (newSchedule: Omit<Schedule, 'id'>) => {
         if (!user) return;

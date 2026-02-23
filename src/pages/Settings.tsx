@@ -23,12 +23,6 @@ const Settings: React.FC = () => {
     const [quality, setQuality] = useState('1080p 60fps (Recommended)');
     const [latency, setLatency] = useState('Low');
 
-    useEffect(() => {
-        if (user) {
-            fetchProfile();
-        }
-    }, [user]);
-
     const fetchProfile = async () => {
         try {
             const { data, error } = await supabase
@@ -53,6 +47,13 @@ const Settings: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (user) {
+            fetchProfile();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     const handleSave = async () => {
         if (!user) return;

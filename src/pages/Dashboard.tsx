@@ -54,30 +54,6 @@ const Dashboard: React.FC = () => {
     const [destinations, setDestinations] = React.useState<any[]>([]);
     const { user } = useAuth();
 
-    useEffect(() => {
-        if (!user) return;
-        fetchStats();
-
-        // Subscribe to profile changes for real-time live status
-        const channel = supabase
-            .channel('profile-status')
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'profiles',
-                filter: `id=eq.${user?.id}`
-            }, (payload) => {
-                if (payload.new && 'is_live' in payload.new) {
-                    setStats(prev => ({ ...prev, isLive: payload.new.is_live }));
-                }
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [user]);
-
     const fetchStats = async () => {
         try {
             const [destRes, videoRes, profileRes] = await Promise.all([
@@ -102,6 +78,31 @@ const Dashboard: React.FC = () => {
         setTimeRange(range);
         setChartData(viewershipData[range] || viewershipData['1h']);
     };
+
+    useEffect(() => {
+        if (!user) return;
+        fetchStats();
+
+        // Subscribe to profile changes for real-time live status
+        const channel = supabase
+            .channel('profile-status')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles',
+                filter: `id=eq.${user?.id}`
+            }, (payload: any) => {
+                if (payload.new && 'is_live' in payload.new) {
+                    setStats(prev => ({ ...prev, isLive: payload.new.is_live }));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     return (
         <div className="animate-fade-in">

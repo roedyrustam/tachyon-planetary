@@ -1,0 +1,229 @@
+
+> tachyon-planetary@0.0.0 lint
+> eslint .
+
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Header.tsx
+  34:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Layout.tsx
+  13:33  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  21:9   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\AddVideoModal.tsx
+  47:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\Toast.tsx
+  19:13  error    Error: Cannot access variable before it is declared
+
+`handleClose` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\Toast.tsx:19:13
+  17 |     useEffect(() => {
+  18 |         const timer = setTimeout(() => {
+> 19 |             handleClose();
+     |             ^^^^^^^^^^^ `handleClose` accessed before it is declared
+  20 |         }, duration);
+  21 |         return () => clearTimeout(timer);
+  22 |     }, [duration]);
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\Toast.tsx:24:5
+  22 |     }, [duration]);
+  23 |
+> 24 |     const handleClose = () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |         setIsExiting(true);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |         setTimeout(onClose, 300); // Match animation duration
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 27 |     };
+     | ^^^^^^^ `handleClose` is declared here
+  28 |
+  29 |     const icons = {
+  30 |         success: <CheckCircle size={18} className="text-secondary" />,  react-hooks/immutability
+  22:8   warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx
+  32:9   error  Error: Cannot access variable before it is declared
+
+`scrollToBottom` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx:32:9
+  30 |
+  31 |     useEffect(() => {
+> 32 |         scrollToBottom();
+     |         ^^^^^^^^^^^^^^ `scrollToBottom` accessed before it is declared
+  33 |     }, [messages]);
+  34 |
+  35 |     const scrollToBottom = () => {
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx:35:5
+  33 |     }, [messages]);
+  34 |
+> 35 |     const scrollToBottom = () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |     };
+     | ^^^^^^^ `scrollToBottom` is declared here
+  38 |
+  39 |     useEffect(() => {
+  40 |         // Subscribe to real-time messages                                                                                                                                                               react-hooks/immutability
+  48:51  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  62:9   error  Error: Cannot access variable before it is declared
+
+`fetchMessages` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx:62:9
+  60 |
+  61 |         // Initial fetch
+> 62 |         fetchMessages();
+     |         ^^^^^^^^^^^^^ `fetchMessages` accessed before it is declared
+  63 |
+  64 |         return () => {
+  65 |             supabase.removeChannel(channel);
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx:69:5
+  67 |     }, []);
+  68 |
+> 69 |     const fetchMessages = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 70 |         const { data, error } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 71 |             .from('chat_messages')
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 88 |     };
+     | ^^^^^^^ `fetchMessages` is declared here
+  89 |
+  90 |     const deleteMessage = async (id: string) => {
+  91 |         if (!user) return;  react-hooks/immutability
+  77:56  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\context\AuthContext.tsx
+  50:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Dashboard.tsx
+  10:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  54:60  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  59:9   error    Error: Cannot access variable before it is declared
+
+`fetchStats` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Dashboard.tsx:59:9
+  57 |     useEffect(() => {
+  58 |         if (!user) return;
+> 59 |         fetchStats();
+     |         ^^^^^^^^^^ `fetchStats` accessed before it is declared
+  60 |
+  61 |         // Subscribe to profile changes for real-time live status
+  62 |         const channel = supabase
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Dashboard.tsx:81:5
+   79 |     }, [user]);
+   80 |
+>  81 |     const fetchStats = async () => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  82 |         try {
+      | ^^^^^^^^^^^^^
+>  83 |             const [destRes, videoRes, profileRes] = await Promise.all([
+      ΓÇª
+      | ^^^^^^^^^^^^^
+>  98 |         }
+      | ^^^^^^^^^^^^^
+>  99 |     };
+      | ^^^^^^^ `fetchStats` is declared here
+  100 |
+  101 |     const handleRangeChange = (range: string) => {
+  102 |         setTimeRange(range);  react-hooks/immutability
+  79:8   warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx
+  34:9  error  Error: Cannot access variable before it is declared
+
+`fetchDestinations` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx:34:9
+  32 |     useEffect(() => {
+  33 |         if (!user) return;
+> 34 |         fetchDestinations();
+     |         ^^^^^^^^^^^^^^^^^ `fetchDestinations` accessed before it is declared
+  35 |     }, [user]);
+  36 |
+  37 |     const fetchDestinations = async () => {
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx:37:5
+  35 |     }, [user]);
+  36 |
+> 37 |     const fetchDestinations = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |         const { data, error } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |             .from('destinations')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |             .select('*')
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |             .order('created_at', { ascending: true });
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |         if (error) console.error('Error fetching destinations:', error);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |         else setDestinations(data || []);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |     };
+     | ^^^^^^^ `fetchDestinations` is declared here
+  47 |
+  48 |     const toggleActive = async (id: string, currentStatus: boolean) => {
+  49 |         const { error } = await supabase  react-hooks/immutability
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\GoLive.tsx
+  60:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  86:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx
+  27:9  error  Error: Cannot access variable before it is declared
+
+`fetchSchedules` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx:27:9
+  25 |     useEffect(() => {
+  26 |         if (!user) return;
+> 27 |         fetchSchedules();
+     |         ^^^^^^^^^^^^^^ `fetchSchedules` accessed before it is declared
+  28 |     }, [user]);
+  29 |
+  30 |     const fetchSchedules = async () => {
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx:30:5
+  28 |     }, [user]);
+  29 |
+> 30 |     const fetchSchedules = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |         const { data, error } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 32 |             .from('schedules')
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |         setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |     };
+     | ^^^^^^^ `fetchSchedules` is declared here
+  41 |
+  42 |     const handleAddSchedule = async (newSchedule: Omit<Schedule, 'id'>) => {
+  43 |         if (!user) return;  react-hooks/immutability
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Settings.tsx
+  30:8  warning  React Hook useEffect has a missing dependency: 'fetchProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Videos.tsx
+  27:12  error  'lastSharedId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  74:51  error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+Γ£û 22 problems (15 errors, 7 warnings)
+  0 errors and 4 warnings potentially fixable with the `--fix` option.
+

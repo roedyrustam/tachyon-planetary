@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardBody } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
-import { Play, Download, Trash2, Search, Filter, UploadCloud } from 'lucide-react';
+import { Play, Download, Trash2, Search, Filter, UploadCloud, Link2, HardDrive } from 'lucide-react';
+import AddVideoModal from '../components/ui/AddVideoModal';
 
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { useEffect } from 'react';
 
 interface Video {
     id: string;
@@ -25,13 +25,8 @@ const Videos: React.FC = () => {
     const [loading, setLoading] = React.useState(true);
     const [searchQuery, setSearchQuery] = React.useState('');
     const [lastSharedId, setLastSharedId] = React.useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
     const { user } = useAuth();
-
-    useEffect(() => {
-        if (user) {
-            fetchVideos();
-        }
-    }, [user]);
 
     const fetchVideos = async () => {
         try {
@@ -48,6 +43,12 @@ const Videos: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (user) {
+            fetchVideos();
+        }
+    }, [user]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
@@ -68,6 +69,33 @@ const Videos: React.FC = () => {
     const handleShare = (id: string) => {
         setLastSharedId(id);
         setTimeout(() => setLastSharedId(null), 2000);
+        // Also copy to clipboard for real functionality
+        navigator.clipboard.writeText(`${window.location.origin}/play/${id}`);
+    };
+
+    const handleAddCloudVideo = async (videoData: { title: string; url: string; duration: string; type: string }) => {
+        if (!user) return;
+
+        // In a real app, we'd add columns 'source_type' and 'source_url'
+        // For this demo, we'll store the URL as the thumbnail if it's a Drive link
+        // or just mock the insertion.
+        const { data, error } = await supabase
+            .from('videos')
+            .insert([{
+                user_id: user.id,
+                title: videoData.title,
+                duration: videoData.duration,
+                thumbnail: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+                views: "0",
+                size: "Cloud",
+                date: "Just now"
+            }])
+            .select();
+
+        if (error) throw error;
+        if (data) {
+            setVideos([data[0], ...videos]);
+        }
     };
 
     const filteredVideos = videos.filter(v =>
@@ -82,7 +110,8 @@ const Videos: React.FC = () => {
                     <p className="page-subtitle">Manage your past streams and uploaded videos</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="secondary" icon={<UploadCloud size={18} />}>Upload File</Button>
+                    <Button variant="secondary" icon={<Link2 size={18} />} onClick={() => setIsModalOpen(true)}>Add Link</Button>
+                    <Button variant="primary" icon={<UploadCloud size={18} />}>Upload File</Button>
                 </div>
             </div>
 
@@ -116,16 +145,22 @@ const Videos: React.FC = () => {
                                 alt={video.title}
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-100"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-                                <Badge variant="info" className="self-end mb-auto bg-black/50 backdrop-blur-md border-white/10 font-mono">
+                            {lastSharedId === video.id && (
+                                <div className="absolute top-4 left-4 z-20">
+                                    <Badge variant="success" className="animate-bounce shadow-lg">Link Copied!</Badge>
+                                </div>
+                            )}
+                            <div className="absolute inset-x-0 top-0 p-4 flex-between z-10">
+                                <Badge variant="info" className="bg-black/50 backdrop-blur-md border-white/10 font-mono">
                                     {video.duration}
                                 </Badge>
-                                {lastSharedId === video.id && (
-                                    <Badge variant="success" className="absolute top-4 left-4 animate-bounce">Link Copied!</Badge>
-                                )}
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
-                                    <Button iconOnly className="rounded-full w-12 h-12" icon={<Play size={24} fill="currentColor" />} />
+                                <div className={`source-indicator ${video.size === 'Cloud' ? 'source-drive' : 'source-local'}`}>
+                                    {video.size === 'Cloud' ? <Link2 size={10} /> : <HardDrive size={10} />}
+                                    {video.size === 'Cloud' ? 'Drive' : 'Local'}
                                 </div>
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
+                                <Button iconOnly className="rounded-full w-12 h-12" icon={<Play size={24} fill="currentColor" />} />
                             </div>
                         </div>
                         <CardBody className="p-4 bg-[#111318]">
@@ -168,14 +203,13 @@ const Videos: React.FC = () => {
                     </Card>
                 ))}
 
-                {filteredVideos.length === 0 && (
-                    <div className="col-span-full text-center py-20 bg-white/5 rounded-2xl border border-dashed border-white/10">
-                        <Search size={48} className="mx-auto text-muted mb-4 opacity-20" />
-                        <p className="text-muted">No videos match your search.</p>
-                        <Button variant="secondary" className="mt-4" onClick={() => setSearchQuery('')}>Clear Search</Button>
-                    </div>
-                )}
             </div>
+
+            <AddVideoModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onAdd={handleAddCloudVideo}
+            />
         </div>
     );
 };
