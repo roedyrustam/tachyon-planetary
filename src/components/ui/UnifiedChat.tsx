@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Youtube, Twitch, Send, Zap } from 'lucide-react';
+import { Youtube, Twitch, Send, Zap, Trash2, Shield } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardBody } from './Card';
 import Badge from './Badge';
 import Button from './Button';
@@ -24,6 +24,7 @@ interface UnifiedChatProps {
 const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [chatInput, setChatInput] = useState('');
+    const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
     const { user } = useAuth();
     const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +87,25 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
         }
     };
 
+    const deleteMessage = async (id: string) => {
+        if (!user) return;
+
+        const { error } = await supabase
+            .from('chat_messages')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting message:', error);
+            // Fallback: Remove from local state
+            setMessages(prev => prev.filter(m => m.id !== id));
+        } else {
+            // Realtime will handle it if we have a DELETE listener, 
+            // but for immediate feedback:
+            setMessages(prev => prev.filter(m => m.id !== id));
+        }
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!chatInput.trim() || !user) return;
@@ -140,14 +160,19 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
                         </div>
                     )}
                     {messages.map((msg) => (
-                        <div key={msg.id} className={`flex flex-col gap-1.5 animate-slide-in-right ${msg.isSuperChat ? 'px-3 py-2 bg-secondary/10 border-l-2 border-secondary rounded-r-lg' : ''}`}>
+                        <div
+                            key={msg.id}
+                            onMouseEnter={() => setHoveredMessage(msg.id)}
+                            onMouseLeave={() => setHoveredMessage(null)}
+                            className={`group relative flex flex-col gap-1.5 animate-slide-in-right p-2 rounded-lg transition-colors ${msg.isSuperChat ? 'bg-secondary/10 border-l-2 border-secondary' : 'hover:bg-white/5'}`}
+                        >
                             <div className="flex items-center gap-2">
                                 {msg.platform === 'Youtube' ? (
                                     <Youtube size={12} className="text-red-500" />
                                 ) : msg.platform === 'Twitch' ? (
                                     <Twitch size={12} className="text-purple-500" />
                                 ) : (
-                                    <div className="w-3 h-3 rounded-full bg-primary flex items-center justify-center text-[6px] text-white">S</div>
+                                    <Shield size={12} className="text-primary" />
                                 )}
                                 <span className={`text-xs font-bold ${msg.isSuperChat ? 'text-secondary' : 'text-primary'}`}>
                                     {msg.user}
@@ -156,6 +181,19 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
                                     <Badge variant="warning" className="text-[8px] px-1 py-0 h-auto">DONATION</Badge>
                                 )}
                                 <span className="text-[10px] text-muted ml-auto font-mono">{msg.time}</span>
+
+                                {/* Moderation Actions */}
+                                {hoveredMessage === msg.id && user && (
+                                    <div className="flex items-center gap-1 ml-2">
+                                        <button
+                                            onClick={() => deleteMessage(msg.id)}
+                                            className="p-1 hover:bg-danger/20 text-muted hover:text-danger rounded transition-colors"
+                                            title="Delete Message"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <p className={`text-sm leading-relaxed ${msg.isSuperChat ? 'font-medium text-white' : 'text-gray-300'}`}>
                                 {msg.isSuperChat && <span className="text-secondary mr-2 font-bold">{msg.amount}</span>}

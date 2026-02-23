@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe } from 'lucide-react';
+import { Radio, Users, Activity, Settings, Maximize2, Mic, MicOff, Video as VidIcon, VideoOff, PlaySquare, SkipForward, Globe, Volume2, VolumeX, Monitor, Grid, Square, Layout, List } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
@@ -33,6 +33,10 @@ const GoLive: React.FC = () => {
         title: 'Untitled Stream'
     });
 
+    const [audioLevels, setAudioLevels] = useState({ mic: 75, system: 60, music: 40 });
+    const [vuLevels, setVuLevels] = useState({ mic: 0, system: 0, music: 0 });
+    const [activeScene, setActiveScene] = useState('Camera Only');
+
     useEffect(() => {
         if (!user) return;
 
@@ -57,15 +61,28 @@ const GoLive: React.FC = () => {
 
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | undefined;
+        let vuInterval: ReturnType<typeof setInterval> | undefined;
+
         if (isLive) {
             interval = setInterval(() => {
                 setUptime(prev => prev + 1);
             }, 1000);
+
+            vuInterval = setInterval(() => {
+                setVuLevels({
+                    mic: micEnabled ? Math.random() * 80 + 10 : 0,
+                    system: Math.random() * 60 + 5,
+                    music: Math.random() * 40 + 10
+                });
+            }, 100);
+        } else {
+            setVuLevels({ mic: 0, system: 0, music: 0 });
         }
         return () => {
             if (interval) clearInterval(interval);
+            if (vuInterval) clearInterval(vuInterval);
         };
-    }, [isLive]);
+    }, [isLive, micEnabled]);
 
     const saveRecording = async () => {
         if (!user || uptime < 5) return;
@@ -104,6 +121,13 @@ const GoLive: React.FC = () => {
             }
 
             setIsLive(nextLiveState);
+
+            window.dispatchEvent(new CustomEvent('show-toast', {
+                detail: {
+                    message: nextLiveState ? 'Stream is now LIVE!' : 'Stream ended successfully.',
+                    type: nextLiveState ? 'success' : 'info'
+                }
+            }));
         } catch (error) {
             console.error('Error toggling live status:', error);
             // Fallback for simulation
@@ -304,8 +328,80 @@ const GoLive: React.FC = () => {
                 </div>
 
                 {/* Sidebar Column: Chat & Events */}
-                {/* Sidebar Column: Chat & Events */}
-                <div className="xl:col-span-1 space-y-6 flex flex-col h-full">
+                <div className="xl:col-span-1 space-y-6 flex flex-col">
+                    {/* Scene Selector */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                <Grid size={16} className="text-primary" /> Scene Selection
+                            </CardTitle>
+                        </CardHeader>
+                        <CardBody className="grid grid-cols-2 gap-3">
+                            {[
+                                { name: 'Camera Only', icon: <VidIcon size={14} /> },
+                                { name: 'Screen + Cam', icon: <Monitor size={14} /> },
+                                { name: 'Intermission', icon: <Layout size={14} /> },
+                                { name: 'Ending Soon', icon: <Square size={14} /> },
+                            ].map((scene) => (
+                                <button
+                                    key={scene.name}
+                                    onClick={() => setActiveScene(scene.name)}
+                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${activeScene === scene.name ? 'bg-primary/20 border-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 border-white/5 text-muted hover:border-white/20'}`}
+                                >
+                                    {scene.icon}
+                                    <span className="text-[10px] font-bold uppercase tracking-tighter">{scene.name}</span>
+                                </button>
+                            ))}
+                        </CardBody>
+                    </Card>
+
+                    {/* Audio Mixer */}
+                    <Card>
+                        <CardHeader className="flex-between">
+                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                <Volume2 size={16} className="text-secondary" /> Audio Mixer
+                            </CardTitle>
+                            <Badge variant="info" className="text-[10px] py-0">LIVE MIX</Badge>
+                        </CardHeader>
+                        <CardBody className="space-y-6">
+                            {[
+                                { id: 'mic', name: 'Microphone', icon: micEnabled ? <Mic size={14} /> : <MicOff size={14} />, color: 'text-primary' },
+                                { id: 'system', name: 'System Audio', icon: <Monitor size={14} />, color: 'text-secondary' },
+                                { id: 'music', name: 'BGM / Spotify', icon: <List size={14} />, color: 'text-accent' },
+                            ].map((audio) => (
+                                <div key={audio.id} className="space-y-2">
+                                    <div className="flex-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={audio.color}>{audio.icon}</span>
+                                            <span className="text-xs font-semibold">{audio.name}</span>
+                                        </div>
+                                        <span className="text-[10px] font-mono text-muted">{audioLevels[audio.id as keyof typeof audioLevels]}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={audioLevels[audio.id as keyof typeof audioLevels]}
+                                            onChange={(e) => setAudioLevels(prev => ({ ...prev, [audio.id]: parseInt(e.target.value) }))}
+                                            className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                                        />
+                                        <button className="text-muted hover:text-white transition-colors">
+                                            {audioLevels[audio.id as keyof typeof audioLevels] === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                                        </button>
+                                    </div>
+                                    {/* VU Meter */}
+                                    <div className="vu-meter">
+                                        <div
+                                            className="vu-bar"
+                                            style={{ width: `${vuLevels[audio.id as keyof typeof vuLevels] * (audioLevels[audio.id as keyof typeof audioLevels] / 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </CardBody>
+                    </Card>
+
                     <UnifiedChat isLive={isLive} />
                 </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Radio, Video, Calendar, Settings as SettingsIcon, LogOut, BarChart3, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, Radio, Video, Calendar, Settings as SettingsIcon, LogOut, BarChart3, LayoutGrid, Layers } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './layout.css';
 
@@ -18,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { name: 'Destinations', path: '/destinations', icon: <LayoutGrid size={20} /> },
         { name: 'Videos', path: '/videos', icon: <Video size={20} /> },
         { name: 'Schedule', path: '/schedule', icon: <Calendar size={20} /> },
+        { name: 'Overlays', path: '/overlays', icon: <Layers size={20} /> },
         { name: 'Settings', path: '/settings', icon: <SettingsIcon size={20} /> },
     ];
 

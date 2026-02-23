@@ -7,6 +7,7 @@ import Schedule from './pages/Schedule.tsx';
 import GoLive from './pages/GoLive.tsx';
 import Analytics from './pages/Analytics.tsx';
 import Settings from './pages/Settings.tsx';
+import Overlays from './pages/Overlays.tsx';
 
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
@@ -40,6 +41,7 @@ function App() {
           <Route path="schedule" element={<Schedule />} />
           <Route path="golive" element={<GoLive />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="overlays" element={<Overlays />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
