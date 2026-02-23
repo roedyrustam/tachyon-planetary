@@ -5,6 +5,8 @@ import Destinations from './pages/Destinations';
 import Videos from './pages/Videos';
 import Schedule from './pages/Schedule';
 import GoLive from './pages/GoLive';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="videos" element={<Videos />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="golive" element={<GoLive />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </Router>
