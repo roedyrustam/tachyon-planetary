@@ -28,19 +28,21 @@ The application follows a standard React SPA architecture with a centralized lay
 
 ### 3.2 UI System (`src/components/ui`)
 - Uses a "Glassmorphism" design system defined in `index.css`.
-- Standardized props for variant and icon management.
+- **AddDestinationModal.tsx**: Handles adding new destinations with a glassmorphism overlay and slide-up animation.
+- Standardized props for variant and icon management (Button, Card, Badge, Input).
 
-## 4. State Management
+## 4. State & Logic
 - Currently utilizes React `useState` and `useEffect` for local component state.
-- Data is mocked in component constants (`GO_LIVE_DATA`, etc.).
+- **Chat Simulation**: Employs `setInterval` loops in `GoLive.tsx` to simulate incoming messages when the stream is active.
+- **Destination Management**: Stateful array management for adding and toggling broadcast targets.
+- Data is mocked in component constants (`initialDestinations`, etc.).
 
 ## 5. Design Tokens (CSS Variables)
 Defined in `src/index.css`:
 - `--primary`: #6366f1 (Indigo)
 - `--secondary`: #10b981 (Emerald)
-- `--danger`: #ef4444
-- `--bg-dark`: Deep space themed colors.
-- `--glass-bg`: Semi-transparent overlays.
+- `--glass-border`: Subtle white border for glass effects.
+- **Modal System**: Custom styles for `.modal-overlay` (blur/fade) and `.modal-content` (slide animation).
 
 ## 6. Future Data Integration
 - Integration with streaming APIs (RTMP/WebRTC).

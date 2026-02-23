@@ -35,10 +35,13 @@ npm run build
 - Prefer **Functional Components** with hooks.
 - Follow the existing **Glassmorphism** design system in `src/index.css`.
 - Use **Lucide React** for icons.
+- **Modals**: Implementation should use the `.modal-overlay` and `.modal-content` classes. Always handle `onClick` propagation to allow closing on overlay click.
 
-## 4. Coding Standards
+## 4. Coding Standards & UI Logic
 - Lint your code before committing: `npm run lint`.
 - Follow the project's atomic design pattern for UI components.
+- **Simulations**: For interactive prototyping, use `setInterval` within `useEffect` hooks (ensure proper cleanup) to simulate real-time data flow.
+- **Animations**: Use predefined keyframes (`fadeIn`, `pulse-glow`, `live-pulse`) for consistent motion design.
 
 ## 5. Deployment
 The project is optimized for deployment on platforms like Vercel or Netlify via Vite's build output.

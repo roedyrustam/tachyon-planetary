@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# StreamPulse 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**StreamPulse** is a professional-grade live streaming platform mockup built with React 19, Vite, and absolute visual excellence. It features a futuristic **Glassmorphism** design system and interactive components for streaming control.
 
-Currently, two official plugins are available:
+![StreamPulse Logo](https://img.shields.io/badge/Stream-Pulse-indigo)
+![Tech Stack](https://img.shields.io/badge/React-19-blue)
+![Styling](https://img.shields.io/badge/Style-Glassmorphism-emerald)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Key Features
 
-## React Compiler
+- **Live Control Room**: Real-time stream monitor with uptime tracking and interactive chat simulation.
+- **Unified Chat**: Simulate incoming messages from YouTube/Twitch and respond in real-time.
+- **Destination Management**: Add and manage broadcast targets (YouTube, Twitch, Facebook, Custom RTMP) via a sleek modal system.
+- **Advanced Analytics**: Interactive charts powered by Recharts for viewing peak viewership and engagement trends.
+- **Resource Library**: Manage past broadcasts and uploaded videos with ease.
+- **Broadcasting Schedule**: Plan and filter upcoming live events.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Framework**: React 19 + Vite
+- **Navigation**: React Router 7
+- **Icons**: Lucide React
+- **Charts**: Recharts
+- **Styling**: Native CSS Variables + Glassmorphism UI Kit
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Quick Start
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
+- Node.js (v18+)
+- npm
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
+```bash
+# Clone the repository
+git clone <repository-url>
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will be available at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🎨 Design System
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+StreamPulse uses a custom-built design system based on:
+- **Aesthetics**: Dark mode with vibrant indigo/emerald gradients.
+- **Components**: Atomic UI elements (Buttons, Cards, Badges) with high-quality micro-interactions.
+- **Layout**: Responsive flexbox/grid layout with structural sidebar navigation.
+
+## 📄 Documentation
+
+- [Product Requirement Document (PRD)](./PRD.md)
+- [Project Blueprint](./BLUEPRINT.md)
+- [Developer Guide](./DOCUMENTATION.md)
+
+---
+Developed with ❤️ by the StreamPulse Team.

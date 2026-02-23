@@ -12,7 +12,7 @@
 
 ### 3.1 Live Control Room (Go Live)
 - Real-time stream monitoring (bitrate, frame drops).
-- Unified chat integration from multiple platforms.
+- Unified chat integration with **interactive simulation** (simulated incoming messages and host chat functionality).
 - Camera and Microphone toggles.
 - Live uptime tracking and network health indicator.
 - Stream preview mockup.
@@ -24,7 +24,8 @@
 
 ### 3.3 Multi-Platform Destinations
 - Manage stream keys and connection status for YouTube, Twitch, etc.
-- One-click destination management.
+- **Add Destination Modal**: Streamlined workflow for adding new broadcast targets with platform-specific icons.
+- One-click destination activation/deactivation.
 
 ### 3.4 Video Management
 - Library of past broadcasts and uploaded videos.
