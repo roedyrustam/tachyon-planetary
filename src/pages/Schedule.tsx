@@ -36,6 +36,7 @@ const SchedulePage: React.FC = () => {
 
     useEffect(() => {
         if (!user) return;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         fetchSchedules();
     }, [user]);
 

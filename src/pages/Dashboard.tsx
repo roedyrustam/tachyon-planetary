@@ -7,7 +7,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
-const viewershipData: Record<string, any[]> = {
+const viewershipData: Record<string, { name: string; viewers: number }[]> = {
     '1h': [
         { name: '10:00', viewers: 1200 },
         { name: '10:10', viewers: 1800 },
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
         bitrate: '6.2 Mbps',
         isLive: false
     });
-    const [destinations, setDestinations] = React.useState<any[]>([]);
+    const [destinations, setDestinations] = React.useState<{ id: string; name: string; active: boolean }[]>([]);
     const { user } = useAuth();
 
     const fetchStats = async () => {

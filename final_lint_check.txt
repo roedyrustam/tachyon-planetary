@@ -1,0 +1,73 @@
+
+> tachyon-planetary@0.0.0 lint
+> eslint .
+
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Header.tsx
+  34:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Layout.tsx
+  22:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\AddVideoModal.tsx
+  47:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\Toast.tsx
+  27:8  warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx
+  47:56  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  69:51  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  88:9   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\context\AuthContext.tsx
+  50:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Dashboard.tsx
+  10:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  94:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx
+  45:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx:45:9
+  43 |     useEffect(() => {
+  44 |         if (!user) return;
+> 45 |         fetchDestinations();
+     |         ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |     }, [user]);
+  47 |
+  48 |     const toggleActive = async (id: string, currentStatus: boolean) => {  react-hooks/set-state-in-effect
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\GoLive.tsx
+  60:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  86:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx
+  39:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx:39:9
+  37 |     useEffect(() => {
+  38 |         if (!user) return;
+> 39 |         fetchSchedules();
+     |         ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |     }, [user]);
+  41 |
+  42 |     const handleAddSchedule = async (newSchedule: Omit<Schedule, 'id'>) => {  react-hooks/set-state-in-effect
+
+Γ£û 15 problems (9 errors, 6 warnings)
+  0 errors and 5 warnings potentially fixable with the `--fix` option.
+

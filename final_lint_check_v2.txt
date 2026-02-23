@@ -1,0 +1,37 @@
+
+> tachyon-planetary@0.0.0 lint
+> eslint .
+
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Header.tsx
+  34:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\layout\Layout.tsx
+  22:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\AddVideoModal.tsx
+  47:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\Toast.tsx
+  27:8  warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\components\ui\UnifiedChat.tsx
+  68:33  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  88:9   warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Dashboard.tsx
+  94:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Destinations.tsx
+  45:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\GoLive.tsx
+  60:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  86:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\roedy\.gemini\antigravity\playground\tachyon-planetary\src\pages\Schedule.tsx
+  39:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+Γ£û 11 problems (3 errors, 8 warnings)
+  0 errors and 7 warnings potentially fixable with the `--fix` option.
+

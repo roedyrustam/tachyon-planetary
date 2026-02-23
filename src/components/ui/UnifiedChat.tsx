@@ -44,7 +44,7 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
             .limit(20);
 
         if (data && !error) {
-            const formatted = data.reverse().map((msg: any) => ({
+            const formatted = data.reverse().map((msg: { id: string; display_name: string; text: string; platform: string; created_at: string; is_super_chat: boolean; amount?: string }) => ({
                 id: msg.id,
                 user: msg.display_name,
                 text: msg.text,
@@ -65,8 +65,8 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ isLive }) => {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'chat_messages'
-            }, (payload) => {
-                const newMessage = payload.new as any;
+            }, (payload: { new: any }) => {
+                const newMessage = payload.new;
                 setMessages(prev => [...prev, {
                     id: newMessage.id,
                     user: newMessage.display_name,
