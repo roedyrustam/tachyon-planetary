@@ -34,7 +34,9 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
             setIsLoading(true);
             setHasError(false);
 
-            if (Hls.isSupported()) {
+            const isHLS = url.toLowerCase().includes('.m3u8') || url.includes('blob:');
+
+            if (isHLS && Hls.isSupported()) {
                 hls = new Hls({
                     enableWorker: true,
                     lowLatencyMode: true,
@@ -75,7 +77,7 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
                         }
                     }
                 });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            } else if (isHLS && video.canPlayType('application/vnd.apple.mpegurl')) {
                 // Native HLS support (Safari)
                 video.src = url;
                 video.addEventListener('loadedmetadata', () => {
@@ -87,8 +89,17 @@ const HLSPlayer: React.FC<HLSPlayerProps> = ({
                     setIsLoading(false);
                 });
             } else {
-                setHasError(true);
-                setIsLoading(false);
+                // Fallback to standard video for MP4/Drive
+                video.src = url;
+                video.load();
+                video.onloadeddata = () => {
+                    setIsLoading(false);
+                    if (autoPlay) video.play().catch(() => { });
+                };
+                video.onerror = () => {
+                    setHasError(true);
+                    setIsLoading(false);
+                };
             }
         };
 

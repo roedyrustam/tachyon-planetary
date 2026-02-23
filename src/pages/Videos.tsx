@@ -102,6 +102,17 @@ const Videos: React.FC = () => {
         }
     };
 
+    const getStreamableUrl = (url?: string) => {
+        if (!url) return '';
+        if (url.includes('drive.google.com')) {
+            const idMatch = url.match(/\/d\/([^/]+)/);
+            if (idMatch && idMatch[1]) {
+                return `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+            }
+        }
+        return url;
+    };
+
     const filteredVideos = videos.filter(v =>
         v.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -236,7 +247,7 @@ const Videos: React.FC = () => {
                         <div className="p-2 sm:p-6 space-y-6">
                             {playingVideo.url ? (
                                 <HLSPlayer
-                                    url={playingVideo.url}
+                                    url={getStreamableUrl(playingVideo.url)}
                                     autoPlay={true}
                                     poster={playingVideo.thumbnail}
                                 />
